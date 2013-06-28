@@ -17,38 +17,33 @@ class HdfTree(wx.Frame):
   def __init__(self, parent, id, title):
     wx.Frame.__init__(self, parent, id, title, wx.DefaultPosition, wx.Size(650, 350))
 
-    hbox = wx.BoxSizer(wx.HORIZONTAL)
-    vbox = wx.BoxSizer(wx.VERTICAL)
-    panel1 = wx.Panel(self, -1)
-    panel2 = wx.Panel(self, -1)
-
-    #self.tree = wx.TreeCtrl(panel1, 1, wx.DefaultPosition, (-1,-1), wx.TR_HIDE_ROOT|wx.TR_HAS_BUTTONS|wx.TR_LINES_AT_ROOT)
-    self.tree = wx.TreeCtrl(panel1, 1, wx.DefaultPosition, (-1,-1),  wx.TR_HAS_BUTTONS)
-    self.tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelChanged, id=1)
+    wxSplt = wx.SplitterWindow(self, -1)
+    wxTree = wx.TreeCtrl(wxSplt, 1, wx.DefaultPosition, (-1,-1),  wx.TR_HAS_BUTTONS)
+    wxTree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelChanged, id=1)
 
     il = wx.ImageList(16, 16)
     home    = il.Add(wx.Image("images/home.png", wx.BITMAP_TYPE_PNG).ConvertToBitmap())
     folder  = il.Add(wx.Image("images/folder.png", wx.BITMAP_TYPE_PNG).ConvertToBitmap())
     dataset = il.Add(wx.Image("images/dataset.png", wx.BITMAP_TYPE_PNG).ConvertToBitmap())
-    self.tree.AssignImageList(il)
+    wxTree.AssignImageList(il)
     
-    self.display = wx.StaticText(panel2, -1, '',(10,10), style=wx.ALIGN_CENTRE)
-    vbox.Add(self.tree, 1, wx.EXPAND)
-    hbox.Add(panel1, 1, wx.EXPAND)
-    hbox.Add(panel2, 1, wx.EXPAND)
-    panel1.SetSizer(vbox)
-    self.SetSizer(hbox)
+    wxTxt = wx.StaticText(wxSplt, -1, '',(10,10) )#, style=wx.ALIGN_CENTRE)
+
+    wxSplt.SplitVertically(wxTree, wxTxt)
     self.Centre()
 
+    self.wxTree=wxTree
+    self.display=wxTxt
   def __del__(self):
     self.Close()   
 
   def OnSelChanged(self, event):
+      wxTree=self.wxTree
       wxNode =  event.GetItem()
-      txt=self.tree.GetItemText(wxNode)
-      data=self.tree.GetPyData(wxNode)
-      #o=self.tree.GetItemData(wxNode)
-      #print o.Data,self.tree.GetPyData(wxNode)
+      txt=wxTree.GetItemText(wxNode)
+      data=wxTree.GetPyData(wxNode)
+      #o=wxTree.GetItemData(wxNode)
+      #print o.Data,wxTree.GetPyData(wxNode)
       #if type(gid)==h5py.h5g.GroupID:
       if data:
         t=type(data)
@@ -81,16 +76,7 @@ class HdfTree(wx.Frame):
             try: v=func(pl)
             except ValueError as e: pass
             else: l.append(tx+': '+str(v))
-
-                      
-          #try:
-          #  chk=pl.get_chunk()
-          #except ValueError as e:
-          #  pass
-          #else:
-          #  l.append('chunk: '+str(chk))
-          #l.append('fillTime: '+str(data.get_create_plist().get_fill_time()))
-                     
+                    
           txt='\n'.join(l)
         print t,data.id
       self.display.SetLabel(txt)
@@ -105,15 +91,15 @@ class HdfTree(wx.Frame):
         image=2
       else:
         image=-1
-      wxNode = self.tree.AppendItem(wxParent, gidStr,image=image,data=wx.TreeItemData(gid))
+      wxNode = self.wxTree.AppendItem(wxParent, gidStr,image=image,data=wx.TreeItemData(gid))
       if t==h5py.h5g.GroupID:
         self._ShowHirarchy(wxNode,gid,lvl+1)
 
   def ShowHirarchy(self):
     fn=os.path.basename(self.fid.name)
-    wxNode = self.tree.AddRoot(fn,image=0)
+    wxNode = self.wxTree.AddRoot(fn,image=0)
     HdfTree._ShowHirarchy(self,wxNode,self.fid,0)
-    self.tree.ExpandAll()
+    self.wxTree.ExpandAll()
 
 if __name__ == '__main__':
   class MyApp(wx.App):
