@@ -1,0 +1,7 @@
+#this file is used in collaboration with 'setup.py sdist'
+#these are additional files used in the source distribution
+
+include utilities.py
+exclude ./tree.py
+recursive-include images *.png
+#prune ./tree.py
