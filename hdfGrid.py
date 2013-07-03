@@ -81,7 +81,16 @@ class Grid(wx.grid.Grid):
     wx.grid.Grid.__init__(self, parent, -1)
     
     self.SetDefaultColSize(50)
-    self.SetDefaultRowSize(20)
+    self.SetDefaultRowSize(17)
+    font=self.GetLabelFont()
+    font.PointSize=8
+    self.SetLabelFont(font)
+
+    font=self.GetDefaultCellFont()
+    font.PointSize=8
+    self.SetDefaultCellFont(font)
+    #self.SetDefaultCellAlignment(wx.ALIGN_RIGHT,wx.ALIGN_CENTRE)
+    self.SetDefaultCellAlignment(wx.ALIGN_CENTRE,wx.ALIGN_CENTRE)
 
     table = TableBase(data)
     self.SetTable (table, True)
@@ -135,7 +144,6 @@ if __name__ == '__main__':
       lbl='pilatus_1'
       fid = h5py.h5f.open(fnHDF)
       hid = h5py.h5o.open(fid,'/entry/dataScan00033/'+lbl)
-      print 'DBG 0'
       frame = HdfGridFrame(None,lbl,hid)
       frame.Show()
       return True
