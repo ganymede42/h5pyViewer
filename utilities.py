@@ -10,49 +10,60 @@ if __name__ == '__main__':
 from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as NavigationToolbar
 
 class SliderGroup():
-    def __init__(self, parent, label, range=(0,100),val=0):
-        self.sliderLabel = wx.StaticText(parent, label=label)
-        self.sliderText = wx.TextCtrl(parent, -1, style=wx.TE_PROCESS_ENTER)
-        self.slider = wx.Slider(parent, -1)
-        self.slider.SetRange(range[0],range[1])      
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(self.sliderLabel, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, border=2)
-        sizer.Add(self.sliderText, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, border=2)
-        sizer.Add(self.slider, 1, wx.EXPAND)
-        self.sizer = sizer
-        self.slider.Bind(wx.EVT_SLIDER, self.sliderHandler)
-        self.sliderText.Bind(wx.EVT_TEXT_ENTER, self.sliderTextHandler)
-        self.SetValue(val)
+  def __init__(self, parent, label, range=(0,100),val=0):
+    self.sliderLabel = wx.StaticText(parent, label=label)
+    self.sliderText = wx.TextCtrl(parent, -1, style=wx.TE_PROCESS_ENTER)
+    self.slider = wx.Slider(parent, -1)
+    self.slider.SetRange(range[0],range[1])      
+    sizer = wx.BoxSizer(wx.HORIZONTAL)
+    sizer.Add(self.sliderLabel, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, border=2)
+    sizer.Add(self.sliderText, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, border=2)
+    sizer.Add(self.slider, 1, wx.EXPAND)
+    self.sizer = sizer
+    self.slider.Bind(wx.EVT_SLIDER, self.sliderHandler)
+    self.sliderText.Bind(wx.EVT_TEXT_ENTER, self.sliderTextHandler)
+    self.SetValue(val)
 
-    def SetValue(self, value):
-        self.value = value
-        self.slider.SetValue(value)
-        self.sliderText.SetValue(str(value))
-    
-    def SetCallback(self,funcCB,usrData):
-      self.cbFuncData=(funcCB,usrData)
+  def SetValue(self, value):
+    self.value = value
+    self.slider.SetValue(value)
+    self.sliderText.SetValue(str(value))
+  
+  def SetCallback(self,funcCB,usrData):
+    self.cbFuncData=(funcCB,usrData)
 
-    def Callback(self,value,msg):
-      try:
-        (funcCB,usrData)=self.cbFuncData
-      except BaseException as e:
-        pass
-      else:
-        funcCB(usrData,value,msg)
+  def Callback(self,value,msg):
+    try:
+      (funcCB,usrData)=self.cbFuncData
+    except BaseException as e:
+      pass
+    else:
+      funcCB(usrData,value,msg)
 
-    def sliderHandler(self, evt):
-        value = evt.GetInt()
-        self.sliderText.SetValue(str(value))
-        self.value=value
-        self.Callback(value,0)      
-        
-    def sliderTextHandler(self, evt):
-        value = int(self.sliderText.GetValue())
-        self.slider.SetValue(value)
-        value = self.slider.Value
-        self.sliderText.SetValue(str(value))
-        self.value=value
-        self.Callback(value,0)      
+  def sliderHandler(self, evt):
+    value = evt.GetInt()
+    self.sliderText.SetValue(str(value))
+    self.value=value
+    self.Callback(value,0)      
+      
+  def sliderTextHandler(self, evt):
+    value = int(self.sliderText.GetValue())
+    self.slider.SetValue(value)
+    value = self.slider.Value
+    self.sliderText.SetValue(str(value))
+    self.value=value
+    self.Callback(value,0)      
+
+def GetSlice(idxXY,shp,wxAxCtrlLst):
+  '''returns a slice list to select data'''
+  sl=[None]*len(shp)
+  for ax in wxAxCtrlLst:
+    sl[ax.idx]=ax.value
+  for i in idxXY:
+    sl[i]=slice(None)
+  sl=tuple(sl)
+  return sl
+
 
 def AddToolbar(parent,sizer):
   toolbar = NavigationToolbar(parent)

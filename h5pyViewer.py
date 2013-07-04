@@ -121,7 +121,7 @@ class HdfViewerFrame(wx.Frame):
            #('filter_by_id',h5py.h5p.PropDCID.get_filter_by_id),
            ('layout',      h5py.h5p.PropDCID.get_layout),
            ('nfilters',    h5py.h5p.PropDCID.get_nfilters),
-           ('obj_track_times', h5py.h5p.PropDCID.get_obj_track_times),
+           #('obj_track_times', h5py.h5p.PropDCID.get_obj_track_times),
            )
           for tx,func in txFcn:
             try: v=func(pl)

@@ -1,15 +1,18 @@
 import os
 import wx,h5py
+import numpy as np
 
 class HdfAttrListCtrl(wx.ListCtrl):
   def __init__(self, parent, *args, **kwargs):
     wx.ListCtrl.__init__(self, parent, style=wx.LC_REPORT)#*args, **kwargs)
     self.InsertColumn(0, 'Name')
     self.InsertColumn(1, 'Value')
-    self.InsertColumn(2, 'Type')
+    self.InsertColumn(2, 'Unit')
+    self.InsertColumn(3, 'Type')
     self.SetColumnWidth(0, 140)
     self.SetColumnWidth(1, 440)
-    self.SetColumnWidth(2, 160)
+    self.SetColumnWidth(2, 60)
+    self.SetColumnWidth(3, 160)
   def ShowAttr(self,hid):
     self.hid=hid
     t=type(hid)
@@ -20,10 +23,29 @@ class HdfAttrListCtrl(wx.ListCtrl):
     else:
       raise(BaseException('cant handle'))
     self.DeleteAllItems()
-    for (idx,(k,v)) in enumerate(obj.attrs.iteritems()):
+    idx=0
+    for (k,v) in obj.attrs.iteritems():
+      if k.startswith('_u_'):
+        continue
       self.InsertStringItem(idx, k)
       self.SetStringItem(idx, 1, str(v))
-      self.SetStringItem(idx, 2, str(type(v)))
+      try:
+        unit=obj.attrs['_u_'+k]
+      except KeyError as e:
+        pass
+      else:
+        self.SetStringItem(idx, 2, unit)
+      t=type(v)
+      if t==np.ndarray:
+        tStr=str(v.dtype)+str(v.shape)
+        if tStr[-2]==',':
+          tStr=tStr[:-2]+')'
+      else:
+        tStr=type(v).__name__
+        try: tStr+='(%d)'%len(v)
+        except TypeError as e: pass
+      self.SetStringItem(idx, 3, tStr)
+      idx+=1
 
     #print h5py.h5a.get_num_attrs(hid)
     #def iterCallback(name, *args):
@@ -39,7 +61,7 @@ class HdfAttrListCtrl(wx.ListCtrl):
 
 class HdfAttribFrame(wx.Frame):
   def __init__(self, parent,lbl,hid):
-    wx.Frame.__init__(self, parent, title=lbl, size=wx.Size(750, 350))
+    wx.Frame.__init__(self, parent, title=lbl, size=wx.Size(800, 350))
     self.wxLstCtrl=HdfAttrListCtrl(self)
     self.wxLstCtrl.ShowAttr(hid)  
     self.Centre()

@@ -27,7 +27,7 @@ class HdfImageFrame(wx.Frame):
 
     t=type(hid)
     if t==h5py.h5d.DatasetID:
-      obj=h5py.Dataset(hid)
+      data=h5py.Dataset(hid)
 
 
     fig = mpl.figure.Figure()
@@ -37,8 +37,6 @@ class HdfImageFrame(wx.Frame):
     #cax = self.fig.add_axes([0.85,0.1,0.075,0.85])
 
     #img = ax.imshow(np.random.rand(10,10),interpolation='nearest')
-    img = ax.imshow(obj[1,...],interpolation='nearest',cmap=mpl.cm.jet, vmin=0, vmax=10)
-    fig.colorbar(img,orientation='vertical')
     canvas = FigureCanvas(self, -1, fig)
     canvas.mpl_connect('motion_notify_event', self.OnMotion)
 
@@ -52,10 +50,22 @@ class HdfImageFrame(wx.Frame):
     statusBar.SetFieldsCount(1)
     sizer.Add(statusBar, 0, wx.LEFT | wx.EXPAND)
 
-    wxAxCtrl=ut.SliderGroup(self, label='Axis:%d'%0)
-    sizer.Add(wxAxCtrl.sizer, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, border=5)
-    wxAxCtrl.SetCallback(HdfImageFrame.SetSlice,self)
+    wxAxCtrlLst=[]
+    l=len(data.shape)
+    idxXY=(l-2,l-1)
+    for idx,l in enumerate(data.shape):
+      if idx in idxXY:
+        continue 
+      wxAxCtrl=ut.SliderGroup(self, label='Axis:%d'%idx,range=(0,l-1))
+      wxAxCtrl.idx=idx
+      wxAxCtrlLst.append(wxAxCtrl)
+      sizer.Add(wxAxCtrl.sizer, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, border=5)
+      wxAxCtrl.SetCallback(HdfImageFrame.OnSetView,wxAxCtrl)
 
+    sl=ut.GetSlice(idxXY,data.shape,wxAxCtrlLst)
+    img = ax.imshow(data[sl],interpolation='nearest',cmap=mpl.cm.jet, vmin=0, vmax=10)
+    fig.colorbar(img,orientation='vertical')
+      
     self.Fit()   
     self.Centre()
     
@@ -65,15 +75,22 @@ class HdfImageFrame(wx.Frame):
     self.sizer=sizer
     self.toolbar=toolbar
     self.statusBar=statusBar
-    self.data=obj
+    self.data=data
+    self.idxXY=idxXY
+    self.wxAxCtrlLst=wxAxCtrlLst
   
+  def SetIdxXY(self,x,y):
+    self.idxXY=(x,y)
+ 
   @staticmethod
-  def SetSlice(usrData,value,msg):
-    #usrData.img.set_data(usrData.data[value,...])
-    usrData.img.set_array(usrData.data[value,...])
-    usrData.canvas.draw()
+  def OnSetView(usrData,value,msg):
+    imgFrm=usrData.slider.Parent
+    #imgFrm.img.set_array(imgFrm.data[usrData.value,...])
+    data=imgFrm.data
+    sl=ut.GetSlice(imgFrm.idxXY,data.shape,imgFrm.wxAxCtrlLst)
+    imgFrm.img.set_array(data[sl])
+    imgFrm.canvas.draw()
     pass
-    
     
   def OnMotion(self,event):
     #print event,event.x,event.y,event.inaxes,event.xdata,event.ydata
