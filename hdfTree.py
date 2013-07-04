@@ -1,6 +1,13 @@
-#!/usr/bin/python
-
-# treectrl.py
+#!/usr/bin/env python
+#*-----------------------------------------------------------------------*
+#|                                                                       |
+#|  Copyright (c) 2013 by Paul Scherrer Institute (http://www.psi.ch)    |
+#|                                                                       |
+#|              Author Thierry Zamofing (thierry.zamofing@psi.ch)        |
+#*-----------------------------------------------------------------------*
+'''
+hdf5 tree viewer to dispay the tree of a hdf5 file.
+'''
 
 import os
 import wx,h5py
@@ -43,29 +50,51 @@ class HdfTreeCtrl(wx.TreeCtrl):
     self.ExpandAll()
 
 if __name__ == '__main__':
+  import utilities as ut
+  import os,sys,argparse #since python 2.7
+  def GetParser(required=True):   
+    fnHDF='/scratch/detectorData/e14472_00033.hdf5'
+    #lbl='mcs'
+    #lbl='pilatus_1'
+    lbl='spec'
+    exampleCmd='--hdfFile='+fnHDF
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     description=__doc__,
+                                     epilog='Example:\n'+os.path.basename(sys.argv[0])+' '+exampleCmd+'\n ')
+    parser.add_argument('--hdfFile', required=required, default=fnHDF, help='the hdf5 to show')
+    return parser
+    args = parser.parse_args()
+    return args
+
   class HdfTreeFrame(wx.Frame):
  
-    def __init__(self, parent, id, title, fnHDF):
-      wx.Frame.__init__(self, parent, id, title, wx.DefaultPosition, wx.Size(350, 450))
-      wxTree = HdfTreeCtrl(self, 1, wx.DefaultPosition, (-1,-1),  wx.TR_HAS_BUTTONS)  
+    def __init__(self, parent, title, fid):
+      wx.Frame.__init__(self, parent, title=title, size=wx.Size(350, 450))
+      wxTree = HdfTreeCtrl(self, style=wx.TR_HAS_BUTTONS)  
       self.Centre()
-  
-      fid = h5py.h5f.open(fnHDF)
       wxTree.ShowHirarchy(fid)
       self.wxTree=wxTree
       self.fid=fid
 
-    def __del__(self):
-      self.fid.close()
-
-  
-  class MyApp(wx.App):
+  class App(wx.App):
     def OnInit(self):
-      fnHDF='/home/zamofing_t/Documents/prj/libDetXR/python/libDetXR/e14472_00033.hdf5'
-      frame = HdfTreeFrame(None, -1, 'hdfTree',fnHDF)
-      frame.Show(True)
+      parser=GetParser()
+      #parser=GetParser(False) # debug with exampleCmd
+      args = parser.parse_args()
+      try:
+        self.fid=fid=h5py.h5f.open(args.hdfFile)
+      except IOError as e:
+        sys.stderr.write('Unable to open File: '+args.hdfFile+'\n')
+        parser.print_usage(sys.stderr)
+        return True
+      frame = HdfTreeFrame(None,args.hdfFile,fid)
+      frame.Show()
       self.SetTopWindow(frame)
       return True
-  
-  app = MyApp(0)
+
+    def OnExit(self):
+      self.fid.close()
+
+  ut.StopWatch.Start()
+  app = App()
   app.MainLoop()

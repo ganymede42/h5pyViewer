@@ -1,8 +1,13 @@
 #!/usr/bin/env python
-"""
-An example of how to use wx or wxagg in an application with the new
-toolbar - comment out the setA_toolbar line for no toolbar
-"""
+#*-----------------------------------------------------------------------*
+#|                                                                       |
+#|  Copyright (c) 2013 by Paul Scherrer Institute (http://www.psi.ch)    |
+#|                                                                       |
+#|              Author Thierry Zamofing (thierry.zamofing@psi.ch)        |
+#*-----------------------------------------------------------------------*
+'''
+implements an image view to show a colored image of a hdf5 dataset.
+'''
 
 if __name__ == '__main__':
   #Used to guarantee to use at least Wx2.8
@@ -106,16 +111,48 @@ class HdfImageFrame(wx.Frame):
         self.statusBar.SetStatusText( "x= %d y=%d val=%g"%(x,y,v),0)
 
 if __name__ == '__main__':
+  import os,sys,argparse #since python 2.7
+  def GetParser(required=True):   
+    fnHDF='/scratch/detectorData/e14472_00033.hdf5'
+    #lbl='mcs'
+    lbl='pilatus_1'
+    #lbl='spec'
+    elem='/entry/dataScan00033/'+lbl
+    exampleCmd='--hdfFile='+fnHDF+' --elem='+elem
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     description=__doc__,
+                                     epilog='Example:\n'+os.path.basename(sys.argv[0])+' '+exampleCmd+'\n ')
+    parser.add_argument('--hdfFile', required=required, default=fnHDF, help='the hdf5 to show')
+    parser.add_argument('--elem', required=required, default=elem, help='the path to the element in the hdf5 file')   
+    return parser
+    args = parser.parse_args()
+    return args
+
   class App(wx.App):
     def OnInit(self):
-      fnHDF='/home/zamofing_t/Documents/prj/libDetXR/python/libDetXR/e14472_00033.hdf5'
-      lbl='mcs'
-      lbl='pilatus_1'
-      fid = h5py.h5f.open(fnHDF)
-      hid = h5py.h5o.open(fid,'/entry/dataScan00033/'+lbl)
-      frame = HdfImageFrame(None,lbl,hid)
+      parser=GetParser()
+      #parser=GetParser(False) # debug with exampleCmd
+      args = parser.parse_args()
+      try:
+        self.fid=fid=h5py.h5f.open(args.hdfFile)
+      except IOError as e:
+        sys.stderr.write('Unable to open File: '+args.hdfFile+'\n')
+        parser.print_usage(sys.stderr)
+        return True
+      try:
+        hid = h5py.h5o.open(fid,args.elem)
+      except KeyError as e:
+        sys.stderr.write('Unable to open Object: '+args.elem+'\n')
+        parser.print_usage(sys.stderr)
+        return True
+      frame = HdfImageFrame(None,args.elem,hid)
       frame.Show()
+      self.SetTopWindow(frame)
       return True
-  
+
+    def OnExit(self):
+      self.fid.close()
+
+  ut.StopWatch.Start()
   app = App()
   app.MainLoop()

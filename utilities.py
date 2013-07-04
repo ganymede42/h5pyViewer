@@ -8,6 +8,18 @@ if __name__ == '__main__':
   mpl.use('WXAgg') #or mpl.use('WX')
 
 from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as NavigationToolbar
+import time
+
+class StopWatch():
+  @classmethod
+  def Start(cls):
+    cls.ts=time.time()
+  @classmethod
+  def Log(cls,str=None,restart=True):
+    ts=time.time()
+    print '%.6f'%(ts-cls.ts),str
+    if restart:
+      cls.ts=ts
 
 class SliderGroup():
   def __init__(self, parent, label, range=(0,100),val=0):

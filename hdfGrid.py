@@ -1,29 +1,28 @@
+#!/usr/bin/env python
+#*-----------------------------------------------------------------------*
+#|                                                                       |
+#|  Copyright (c) 2013 by Paul Scherrer Institute (http://www.psi.ch)    |
+#|                                                                       |
+#|              Author Thierry Zamofing (thierry.zamofing@psi.ch)        |
+#*-----------------------------------------------------------------------*
+'''
+implements a grid view classe to show 'excel-like'-tables of a hdf5 dataset.
+'''
 
 import wx,h5py
 import wx.grid
 import numpy as N
 import utilities as ut
-import time
-#http://wxpython-users.1045709.n5.nabble.com/filling-a-wxgrid-td2348720.html
 
-class StopWatch():
-  @classmethod
-  def Start(cls):
-    cls.ts=time.time()
-  @classmethod
-  def Log(cls,str=None,restart=True):
-    ts=time.time()
-    print '%.6f'%(ts-cls.ts),str
-    if restart:
-      cls.ts=ts
+#http://wxpython-users.1045709.n5.nabble.com/filling-a-wxgrid-td2348720.html
 
 class Table2DArray(wx.grid.PyGridTableBase):
   def __init__(self, data):
     wx.grid.PyGridTableBase.__init__(self)
-    #StopWatch.Log('DBG 1')
+    #ut.StopWatch.Log('DBG 1')
     self.data = data
-    #StopWatch.Log('DBG 2')
-    #StopWatch.Log('DBG 3')
+    #ut.StopWatch.Log('DBG 2')
+    #ut.StopWatch.Log('DBG 3')
 
   #def GetRowLabelValue(self,idx):
   #  return idx
@@ -31,24 +30,24 @@ class Table2DArray(wx.grid.PyGridTableBase):
     return idx
   
   def GetNumberRows(self):
-    #StopWatch.Log('GetNumberRows')
+    #ut.StopWatch.Log('GetNumberRows')
     return self.view.shape[0]
 
   def GetNumberCols(self):
-    #StopWatch.Log('GetNumberCols')
+    #ut.StopWatch.Log('GetNumberCols')
     return self.view.shape[1]
 
   def GetValue(self, row, col):
-    #StopWatch.Log('GetValue %d %d'%(row,col))
+    #ut.StopWatch.Log('GetValue %d %d'%(row,col))
     return self.view[row,col]
 
 class TableCompound(wx.grid.PyGridTableBase):
   def __init__(self, data):
     wx.grid.PyGridTableBase.__init__(self)
-    #StopWatch.Log('DBG 1')
+    #ut.StopWatch.Log('DBG 1')
     self.data = data
-    #StopWatch.Log('DBG 2')
-    #StopWatch.Log('DBG 3')
+    #ut.StopWatch.Log('DBG 2')
+    #ut.StopWatch.Log('DBG 3')
 
   #def GetRowLabelValue(self,idx):
   #  return idx
@@ -56,15 +55,15 @@ class TableCompound(wx.grid.PyGridTableBase):
     return self.view.dtype.names[idx]
   
   def GetNumberRows(self):
-    #StopWatch.Log('GetNumberRows')
+    #ut.StopWatch.Log('GetNumberRows')
     return self.view.shape[0]
 
   def GetNumberCols(self):
-    #StopWatch.Log('GetNumberCols')
+    #ut.StopWatch.Log('GetNumberCols')
     return self.view.dtype.num
 
   def GetValue(self, row, col):
-    #StopWatch.Log('GetValue %d %d'%(row,col))
+    #ut.StopWatch.Log('GetValue %d %d'%(row,col))
     return self.view.value[row][col]
 
 class Grid(wx.grid.Grid):
@@ -107,11 +106,11 @@ class HdfGridFrame(wx.Frame):
     t=type(hid)
     if t==h5py.h5d.DatasetID:
       data=h5py.Dataset(hid)
-    #StopWatch.Log('DBG 0.1')
+    #ut.StopWatch.Log('DBG 0.1')
     #obj=N.random.rand(2,3000,4000)
     #data=obj.value
     #shape=obj.value.shape
-    #StopWatch.Log('DBG 0.2')
+    #ut.StopWatch.Log('DBG 0.2')
     #grid = Grid(pan, N.random.rand(3000,4000))
     grid = Grid(pan, data)
     
@@ -156,17 +155,48 @@ class HdfGridFrame(wx.Frame):
     self.Centre()
     
 if __name__ == '__main__':
+  import os,sys,argparse #since python 2.7
+  def GetParser(required=True):   
+    fnHDF='/scratch/detectorData/e14472_00033.hdf5'
+    #lbl='mcs'
+    #lbl='pilatus_1'
+    lbl='spec'
+    elem='/entry/dataScan00033/'+lbl
+    exampleCmd='--hdfFile='+fnHDF+' --elem='+elem
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     description=__doc__,
+                                     epilog='Example:\n'+os.path.basename(sys.argv[0])+' '+exampleCmd+'\n ')
+    parser.add_argument('--hdfFile', required=required, default=fnHDF, help='the hdf5 to show')
+    parser.add_argument('--elem', required=required, default=elem, help='the path to the element in the hdf5 file')   
+    return parser
+    args = parser.parse_args()
+    return args
+
   class App(wx.App):
     def OnInit(self):
-      fnHDF='/home/zamofing_t/Documents/prj/libDetXR/python/libDetXR/e14472_00033.hdf5'
-      lbl='mcs'
-      lbl='pilatus_1'
-      lbl='spec'
-      fid = h5py.h5f.open(fnHDF)
-      hid = h5py.h5o.open(fid,'/entry/dataScan00033/'+lbl)
-      frame = HdfGridFrame(None,lbl,hid)
+      parser=GetParser()
+      #parser=GetParser(False) # debug with exampleCmd
+      args = parser.parse_args()
+      try:
+        self.fid=fid=h5py.h5f.open(args.hdfFile)
+      except IOError as e:
+        sys.stderr.write('Unable to open File: '+args.hdfFile+'\n')
+        parser.print_usage(sys.stderr)
+        return True
+      try:
+        hid = h5py.h5o.open(fid,args.elem)
+      except KeyError as e:
+        sys.stderr.write('Unable to open Object: '+args.elem+'\n')
+        parser.print_usage(sys.stderr)
+        return True
+      frame = HdfGridFrame(None,args.elem,hid)
       frame.Show()
+      self.SetTopWindow(frame)
       return True
-  StopWatch.Start()
+
+    def OnExit(self):
+      self.fid.close()
+
+  ut.StopWatch.Start()
   app = App()
   app.MainLoop()

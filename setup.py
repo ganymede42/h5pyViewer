@@ -75,8 +75,9 @@ def runSetup(**kv):
         #'py_modules'  :['libDetXR', 'cbfParser'],
         'packages'    :['h5pyViewer'],
         'package_dir' :{'h5pyViewer':'.'},
+        'package_data':{'h5pyViewer': ['images/*.png']},
         #'requires' requires: h5py==2.0.1 libDetXR==0.0.0.6 numpy==1.7.1 matplotlib==1.2.0 
-        'requires' : ['ctypes','h5py','numpy','matplotlib','libDetXR'] 
+        'requires' : ['ctypes','h5py','numpy','matplotlib','libDetXR']
       }
   if kv:
     args.update(kv)

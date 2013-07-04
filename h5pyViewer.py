@@ -1,8 +1,14 @@
-#!/usr/bin/python
-
-# treectrl.py
-
-import os
+#!/usr/bin/env python
+#*-----------------------------------------------------------------------*
+#|                                                                       |
+#|  Copyright (c) 2013 by Paul Scherrer Institute (http://www.psi.ch)    |
+#|                                                                       |
+#|              Author Thierry Zamofing (thierry.zamofing@psi.ch)        |
+#*-----------------------------------------------------------------------*
+'''
+hdf5 viewer to dispay images, tables, attributes and trees of a hdf5 file.
+'''
+import os,sys
 import wx,h5py
 from hdfTree import *
 from hdfGrid import *
@@ -58,15 +64,22 @@ class HdfTreePopupMenu(wx.Menu):
 class HdfViewerFrame(wx.Frame):
 
   def Open(self,fnHDF):
-    self.fid = h5py.h5f.open(fnHDF)
-    self.wxTree.ShowHirarchy(self.fid)
+    try:
+      self.fid=h5py.h5f.open(fnHDF)
+    except IOError as e:
+      sys.stderr.write('Unable to open File: '+fnHDF+'\n')
+    else: 
+      self.wxTree.ShowHirarchy(self.fid)
 
   def Close(self):
-    self.fid.close()
-    del self.fid
+    try:
+      self.fid.close()
+      del self.fid
+    except AttributeError as e:
+      pass
 
-  def __init__(self, parent, id, title):
-    wx.Frame.__init__(self, parent, id, title, wx.DefaultPosition, wx.Size(650, 350))
+  def __init__(self, parent, title):
+    wx.Frame.__init__(self, parent, title=title, size=wx.Size(650, 350))
 
     wxSplt = wx.SplitterWindow(self, -1)
     wxTree = HdfTreeCtrl(wxSplt, 1, wx.DefaultPosition, (-1,-1),  wx.TR_HAS_BUTTONS)
@@ -137,13 +150,28 @@ class HdfViewerFrame(wx.Frame):
       self.PopupMenu(HdfTreePopupMenu((self.wxTree,wxNode)), event.GetPoint())    
 
 if __name__ == '__main__':
+  def GetArgs():   
+    import sys,argparse #since python 2.7
+    fnHDF='/scratch/detectorData/e14472_00033.hdf5'
+
+    exampleCmd='--hdfFile='+fnHDF    
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     description=__doc__,
+                                     epilog='Example:\n'+os.path.basename(sys.argv[0])+' '+exampleCmd+'\n ')
+    parser.add_argument('--hdfFile', default=fnHDF, help='the hdf5 to show')
+    
+    args = parser.parse_args()
+    return args
+
   class MyApp(wx.App):
-      def OnInit(self):
-          frame = HdfViewerFrame(None, -1, 'h5pyViewer')
-          frame.Open('/home/zamofing_t/Documents/prj/libDetXR/python/libDetXR/e14472_00033.hdf5')
-          frame.Show(True)
-          self.SetTopWindow(frame)
-          return True
-  
-  app = MyApp(0)
+    def OnInit(self):
+      args=GetArgs()
+      frame = HdfViewerFrame(None, 'h5pyViewer')
+      frame.Open(args.hdfFile)
+      frame.Show(True)
+      self.SetTopWindow(frame)
+      return True
+    
+#------------------ Main Code ----------------------------------    
+  app = MyApp()
   app.MainLoop()
