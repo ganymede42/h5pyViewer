@@ -4,5 +4,5 @@
 exclude ./tree.py
 exclude ./tmp.py
 #include utilities.py
-#recursive-include images *.png
+#recursive-include h5pyViewer/images *.png
 #prune ./tree.py
