@@ -68,7 +68,8 @@ class HdfImageFrame(wx.Frame):
       wxAxCtrl.SetCallback(HdfImageFrame.OnSetView,wxAxCtrl)
 
     sl=ut.GetSlice(idxXY,data.shape,wxAxCtrlLst)
-    img = ax.imshow(data[sl],interpolation='nearest',cmap=mpl.cm.jet, vmin=0, vmax=10)
+    #img = ax.imshow(data[sl],interpolation='nearest',cmap=mpl.cm.jet, vmin=0, vmax=10)
+    img = ax.imshow(data[sl],interpolation='nearest',cmap=mpl.cm.jet, vmin=0, vmax=64000)
     fig.colorbar(img,orientation='vertical')
       
     self.Fit()   

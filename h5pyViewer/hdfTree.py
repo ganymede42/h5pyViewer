@@ -16,9 +16,10 @@ class HdfTreeCtrl(wx.TreeCtrl):
   def __init__(self, parent, *args, **kwargs):
     wx.TreeCtrl.__init__(self, parent, *args, **kwargs)
     il = wx.ImageList(16, 16)
-    home    = il.Add(wx.Image("images/home.png", wx.BITMAP_TYPE_PNG).ConvertToBitmap())
-    folder  = il.Add(wx.Image("images/folder.png", wx.BITMAP_TYPE_PNG).ConvertToBitmap())
-    dataset = il.Add(wx.Image("images/dataset.png", wx.BITMAP_TYPE_PNG).ConvertToBitmap())
+    rootDir=os.path.join(os.path.dirname(__file__),'images')
+    home    = il.Add(wx.Image(rootDir+"/home.png", wx.BITMAP_TYPE_PNG).ConvertToBitmap())
+    folder  = il.Add(wx.Image(rootDir+"/folder.png", wx.BITMAP_TYPE_PNG).ConvertToBitmap())
+    dataset = il.Add(wx.Image(rootDir+"/dataset.png", wx.BITMAP_TYPE_PNG).ConvertToBitmap())
     self.AssignImageList(il)
 
   def _ShowHirarchy(self,wxParent,gidParent,lvl):

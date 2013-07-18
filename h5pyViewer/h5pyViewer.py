@@ -10,6 +10,7 @@ hdf5 viewer to dispay images, tables, attributes and trees of a hdf5 file.
 '''
 import os,sys
 import wx,h5py
+import wx.py
 from hdfTree import *
 from hdfGrid import *
 from hdfAttrib import *
@@ -22,9 +23,10 @@ class HdfTreePopupMenu(wx.Menu):
     self.AddMenu(self.OnShowAttrib,"Show Attributes")
     self.AddMenu(self.OnShowData,"Show Data")
     self.AddMenu(self.OnShowImage,"Show Image")
+    self.AddMenu(self.OnShell,"Python Shell")
     self.AddMenu(self.OnItem1,"Item One")
     self.AddMenu(self.OnItem2,"Item Two")
-    self.AddMenu(self.OnItem2,"Item Three")
+    self.AddMenu(self.OnItem3,"Item Three")
 
   def AddMenu(self,func,lbl):
     item = wx.MenuItem(self, -1, lbl)
@@ -54,6 +56,41 @@ class HdfTreePopupMenu(wx.Menu):
     frame=HdfImageFrame(wxTree,lbl,hid)
     frame.Show(True)  
     
+  def OnShell(self, event):
+    wxTree,wxNode=self.wxObjSrc
+    frame = wx.Frame(wxTree, -1, "wxPyShell",size=wx.Size(800, 500))
+    frame.Centre()
+    wnd=app.GetTopWindow() 
+    loc={'app'  :app,
+         'fid'  :app.GetTopWindow().fid,
+         'lbl'  :wxTree.GetItemText(wxNode),
+         'hid'  :wxTree.GetPyData(wxNode),
+         'h5py' : h5py
+         }
+    introText='''Shell to the HDF5 objects
+app: application object
+fid: hdf5 file object
+lbl: label of selected hdf5 object
+hid: selected hdf5 object
+
+Example:
+import h5py
+ds=h5py.Dataset(hid)
+ds
+ds[1,:,:]
+'''
+    shell=wx.py.shell.Shell(frame, introText=introText,locals=loc)
+    frame.Show(True)
+    #if loc is None, all variables are visible. the context is global
+    #shell.push('wnd=app.GetTopWindow()')
+    #for cmd in [
+    #  'wnd=app.GetTopWindow();wxTree=wnd.wxTree',
+    #  'wxNode=wnd.wxTree.GetSelection()',
+    #  'print wnd.fid',
+    #  'lbl=wxTree.GetItemText(wxNode)',
+    #  'hid=wxTree.GetPyData(wxNode)']:
+    #  shell.run(cmd, prompt=False)
+
   def OnItem1(self, event):
     print "Item One selected obj %s"%self.lbl
   def OnItem2(self, event):
@@ -92,7 +129,7 @@ class HdfViewerFrame(wx.Frame):
 
     #wxLstCtrl=HdfAttrListCtrl(wxSplt)
     #wxSplt.SplitVertically(wxTree, wxLstCtrl)
-
+    self.BuildMenu()
     
     self.Centre()
 
@@ -100,6 +137,26 @@ class HdfViewerFrame(wx.Frame):
     self.display=wxTxt
   def __del__(self):
     self.Close()   
+
+  def BuildMenu(self):
+    menubar = wx.MenuBar()
+    file = wx.Menu()
+    edit = wx.Menu()
+    help = wx.Menu()
+    file.Append(101, '&Open', 'Open a new document')
+    file.Append(102, '&Save', 'Save the document')
+    file.AppendSeparator()
+    quit = wx.MenuItem(file, 105, '&Quit\tCtrl+Q', 'Quit the Application')
+    #quit.SetBitmap(wx.Image('stock_exit-16.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap())
+    file.AppendItem(quit)
+    
+    menubar.Append(file, '&File')
+    menubar.Append(edit, '&Edit')
+    menubar.Append(help, '&Help')
+    self.SetMenuBar(menubar)
+    self.CreateStatusBar()
+
+    
 
   def OnSelChanged(self, event):
       wxTree=self.wxTree
