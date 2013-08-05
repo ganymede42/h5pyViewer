@@ -138,25 +138,43 @@ class HdfViewerFrame(wx.Frame):
   def __del__(self):
     self.Close()   
 
-  def BuildMenu(self):
-    menubar = wx.MenuBar()
-    file = wx.Menu()
-    edit = wx.Menu()
-    help = wx.Menu()
-    file.Append(101, '&Open', 'Open a new document')
-    file.Append(102, '&Save', 'Save the document')
-    file.AppendSeparator()
-    quit = wx.MenuItem(file, 105, '&Quit\tCtrl+Q', 'Quit the Application')
-    #quit.SetBitmap(wx.Image('stock_exit-16.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap())
-    file.AppendItem(quit)
-    
-    menubar.Append(file, '&File')
-    menubar.Append(edit, '&Edit')
-    menubar.Append(help, '&Help')
-    self.SetMenuBar(menubar)
-    self.CreateStatusBar()
+  def OnOpen(self, event):
+    print 'OnOpen'
 
+  def BuildSubMenu(self,entries):
+    mn = wx.Menu()
+    for wxid,txt,hlp,sub in entries:
+      if type(sub)==tuple:
+        subMn=self.BuildSubMenu(sub)
+        mn.AppendMenu(wxid,txt,subMn)
+      else:
+        mn.Append(wxid,txt,hlp)
+        wx.EVT_MENU(self, wxid, sub)
+    return mn
     
+  def BuildMenu(self):
+    #http://wiki.wxpython.org/AnotherTutorial#wx.MenuBar
+    mnBar = wx.MenuBar()
+
+    #File Menu
+    menuStruct=('&File',((wx.ID_OPEN, '&Open', 'Open a new document',self.OnOpen),
+                         (wx.ID_EXIT, '&Quit', 'Quit the Application',None),
+                         (wx.ID_ANY, 'SubMenu', 'My SubMenu',
+                         ((wx.ID_ANY, 'SubMenuEntry', 'My SubMenuEntry',None),),),),
+                '&Edit', (),
+                '&Help', ((wx.ID_HELP,'Help','Application Help',None),
+                          (wx.ID_ABOUT,'About','Application About',None),),
+                )
+    for idx in range(0,len(menuStruct),2):
+      mn=self.BuildSubMenu(menuStruct[idx+1])
+      mnBar.Append(mn, menuStruct[idx])
+       
+    #mn.AppendSeparator()
+    #mnItem = wx.MenuItem(mn, 105, '&Quit\tCtrl+Q', 'Quit the Application')
+    #mnItem.SetBitmap(wx.Image('stock_exit-16.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap())
+    #mn.AppendItem(mnItem)   
+    self.SetMenuBar(mnBar)
+    self.CreateStatusBar()   
 
   def OnSelChanged(self, event):
       wxTree=self.wxTree
