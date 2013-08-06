@@ -100,7 +100,7 @@ ds[1,:,:]
 
 class HdfViewerFrame(wx.Frame):
 
-  def Open(self,fnHDF):
+  def OpenFile(self,fnHDF):
     try:
       self.fid=h5py.h5f.open(fnHDF)
     except IOError as e:
@@ -108,7 +108,9 @@ class HdfViewerFrame(wx.Frame):
     else: 
       self.wxTree.ShowHirarchy(self.fid)
 
-  def Close(self):
+  def CloseFile(self):
+    #http://docs.wxwidgets.org/2.8/wx_windowdeletionoverview.html#windowdeletionoverview
+    print 'CloseFile'
     try:
       self.fid.close()
       del self.fid
@@ -136,39 +138,49 @@ class HdfViewerFrame(wx.Frame):
     self.wxTree=wxTree
     self.display=wxTxt
   def __del__(self):
-    self.Close()   
-
+    self.CloseFile()
+  
   def OnOpen(self, event):
-    print 'OnOpen'
-
-  def BuildSubMenu(self,entries):
-    mn = wx.Menu()
-    for wxid,txt,hlp,sub in entries:
-      if type(sub)==tuple:
-        subMn=self.BuildSubMenu(sub)
-        mn.AppendMenu(wxid,txt,subMn)
-      else:
-        mn.Append(wxid,txt,hlp)
-        wx.EVT_MENU(self, wxid, sub)
-    return mn
+    dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), '','HDF5 files (*.hdf5)|*.hdf5|all (*.*)|*.*', wx.OPEN|wx.FD_CHANGE_DIR)
+    if dlg.ShowModal() == wx.ID_OK:
+      path = dlg.GetPath()
+      #mypath = os.path.basename(path)
+      #self.SetStatusText("You selected: %s" % mypath)
+      self.CloseFile()
+      self.OpenFile(path)
+      print 'OnOpen',path
+    dlg.Destroy()       
+  
+  def OnCloseWindow(self, event):
+    print 'OnCloseWindow'
+    self.Destroy()
     
   def BuildMenu(self):
     #http://wiki.wxpython.org/AnotherTutorial#wx.MenuBar
     mnBar = wx.MenuBar()
 
-    #File Menu
-    menuStruct=('&File',((wx.ID_OPEN, '&Open', 'Open a new document',self.OnOpen),
-                         (wx.ID_EXIT, '&Quit', 'Quit the Application',None),
-                         (wx.ID_ANY, 'SubMenu', 'My SubMenu',
-                         ((wx.ID_ANY, 'SubMenuEntry', 'My SubMenuEntry',None),),),),
-                '&Edit', (),
-                '&Help', ((wx.ID_HELP,'Help','Application Help',None),
-                          (wx.ID_ABOUT,'About','Application About',None),),
-                )
-    for idx in range(0,len(menuStruct),2):
-      mn=self.BuildSubMenu(menuStruct[idx+1])
-      mnBar.Append(mn, menuStruct[idx])
-       
+    #-------- File Menu --------
+    mn = wx.Menu()
+    mnItem=mn.Append(wx.ID_OPEN, '&Open', 'Open a new document');self.Bind(wx.EVT_MENU, self.OnOpen, mnItem)
+    mnSub = wx.Menu()
+    mnItem=mnSub.Append(wx.ID_ANY, 'SubMenuEntry', 'My SubMenuEntry')
+    mn.AppendMenu(wx.ID_ANY, 'SubMenu', mnSub)   
+    mn.AppendSeparator()
+    mnItem=mn.Append(wx.ID_EXIT, '&Quit', 'Quit the Application');self.Bind(wx.EVT_MENU, self.OnCloseWindow, mnItem)
+    mnBar.Append(mn, '&File')
+    
+    self.Bind(wx.EVT_CLOSE, self.OnCloseWindow)
+
+    #-------- Edit Menu --------
+    mn = wx.Menu()
+    mnBar.Append(mn, '&Edit')
+
+    #-------- Help Menu --------
+    mn = wx.Menu()
+    mnItem=mn.Append(wx.ID_HELP,'Help','Application Help')
+    mnItem=mn.Append(wx.ID_ABOUT,'About','Application About')
+    mnBar.Append(mn, '&Help')
+          
     #mn.AppendSeparator()
     #mnItem = wx.MenuItem(mn, 105, '&Quit\tCtrl+Q', 'Quit the Application')
     #mnItem.SetBitmap(wx.Image('stock_exit-16.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap())
@@ -242,7 +254,7 @@ if __name__ == '__main__':
     def OnInit(self):
       args=GetArgs()
       frame = HdfViewerFrame(None, 'h5pyViewer')
-      frame.Open(args.hdfFile)
+      frame.OpenFile(args.hdfFile)
       frame.Show(True)
       self.SetTopWindow(frame)
       return True

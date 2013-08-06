@@ -45,6 +45,7 @@ class HdfTreeCtrl(wx.TreeCtrl):
       txt=hid.name
     else:
       txt='root'
+    self.DeleteAllItems()
     wxNode = self.AddRoot(txt,image=0)
     self._ShowHirarchy(wxNode,hid,0)
 
