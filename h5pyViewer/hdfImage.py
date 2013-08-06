@@ -24,83 +24,51 @@ import os,h5py
 import numpy as np
 import utilities as ut
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+import pylab as plt #used for the colormaps
 #or from matplotlib.backends.backend_wx import FigureCanvasWx as FigureCanvas
 #The source of the DraggableColorbar is from:
 #http://www.ster.kuleuven.be/~pieterd/python/html/plotting/interactive_colorbar.html
-import pylab as plt
-class DraggableColorbar(object):
-  def __init__(self, cbar, mappable):
-    self.cbar = cbar
-    self.mappable = mappable
-    self.press = None
-    self.cycle = sorted([i for i in dir(plt.cm) if hasattr(getattr(plt.cm,i),'N')])
-    self.index = self.cycle.index(cbar.get_cmap().name)
 
-  def connect(self):
-    """connect to all the events we need"""
-    self.cidpress = self.cbar.patch.figure.canvas.mpl_connect('button_press_event', self.on_press)
-    self.cidrelease = self.cbar.patch.figure.canvas.mpl_connect('button_release_event', self.on_release)
-    self.cidmotion = self.cbar.patch.figure.canvas.mpl_connect('motion_notify_event', self.on_motion)
-    self.keypress = self.cbar.patch.figure.canvas.mpl_connect('key_press_event', self.key_press)
+class DlgColBarSetup(wx.Dialog):
+  def __init__(self,parent):
+    wx.Dialog.__init__(self,parent,-1,'Colormap Setup')
+    colBar=parent.colBar
+    cmap=colBar.cmap
+    nrm=colBar.norm
+    txtVMin=wx.StaticText(self,-1,'vmin')
+    txtVMax=wx.StaticText(self,-1,'vmax')
+    self.edVMin=edVMin=wx.TextCtrl(self,-1,'%g'%nrm.vmin)
+    self.edVMax=edVMax=wx.TextCtrl(self,-1,'%g'%nrm.vmax)
+    sizer=wx.BoxSizer(wx.VERTICAL)
+    fgs=wx.FlexGridSizer(3,2,5,5)
+    fgs.Add(txtVMin,0,wx.ALIGN_RIGHT)
+    fgs.Add(edVMin,0,wx.EXPAND)
+    fgs.Add(txtVMax,0,wx.ALIGN_RIGHT)
+    fgs.Add(edVMax,0,wx.EXPAND)
+    sizer.Add(fgs,0,wx.EXPAND|wx.ALL,5)
 
-  def on_press(self, event):
-    """on button press we will see if the mouse is over us and store some data"""
-    if event.inaxes != self.cbar.ax: return
-    self.press = event.x, event.y
+    edVMin.SetFocus()
 
-  def key_press(self, event):
-    if event.key=='down':
-      self.index += 1
-    elif event.key=='up':
-      self.index -= 1
-    if self.index<0:
-      self.index = len(self.cycle)
-    elif self.index>=len(self.cycle):
-      self.index = 0
-    cmap = self.cycle[self.index]
-    self.cbar.set_cmap(cmap)
-    self.cbar.draw_all()
-    self.mappable.set_cmap(cmap)
-    self.mappable.get_axes().set_title(cmap)
-    self.cbar.patch.figure.canvas.draw()
+    btns =  self.CreateButtonSizer(wx.OK|wx.CANCEL)
+    sizer.Add(btns,0,wx.EXPAND|wx.ALL,5)
+    self.Bind(wx.EVT_BUTTON, self.OnBtnOn, id=wx.ID_OK)
 
-  def on_motion(self, event):
-    'on motion we will move the rect if the mouse is over us'
-    if self.press is None: return
-    #if event.inaxes != self.cbar.ax: return
-    xprev, yprev = self.press
-    dx = event.x - xprev
-    dy = event.y - yprev
-    self.press = event.x,event.y
-    #print 'x0=%f, xpress=%f, event.xdata=%f, dx=%f, x0+dx=%f'%(x0, xpress, event.xdata, dx, x0+dx)
-    scale = self.cbar.norm.vmax - self.cbar.norm.vmin
-    perc = 0.03
-    if event.button==1:
-      self.cbar.norm.vmin -= (perc*scale)*np.sign(dy)
-      self.cbar.norm.vmax -= (perc*scale)*np.sign(dy)
-    elif event.button==3:
-      self.cbar.norm.vmin -= (perc*scale)*np.sign(dy)
-      self.cbar.norm.vmax += (perc*scale)*np.sign(dy)
-    self.cbar.draw_all()
-    self.mappable.set_norm(self.cbar.norm)
-    self.cbar.patch.figure.canvas.draw()
+    self.SetSizer(sizer)
+    sizer.Fit(self)
 
-
-  def on_release(self, event):
-    """on release we reset the press data"""
-    self.press = None
-    self.mappable.set_norm(self.cbar.norm)
-    self.cbar.patch.figure.canvas.draw()
-
-  def disconnect(self):
-    """disconnect all the stored connection ids"""
-    self.cbar.patch.figure.canvas.mpl_disconnect(self.cidpress)
-    self.cbar.patch.figure.canvas.mpl_disconnect(self.cidrelease)
-    self.cbar.patch.figure.canvas.mpl_disconnect(self.cidmotion)
+  def OnBtnOn(self, event):
+    event.Skip()#do not consume (use event to close the window and sent return code)
+    print 'OnBtnOn'
+    parent=self.GetParent()
+    colBar=parent.colBar
+    colBar.norm.vmin=float(self.edVMin.Value)
+    colBar.norm.vmax=float(self.edVMax.Value)
+    parent.img.set_norm(colBar.norm)
+    colBar.patch.figure.canvas.draw()      
 
 class HdfImageFrame(wx.Frame):
   def __init__(self, parent,lbl,hid):
-    wx.Frame.__init__(self, parent, title=lbl, size=wx.Size(750, 350))
+    wx.Frame.__init__(self, parent, title=lbl, size=wx.Size(850, 650))
 
     t=type(hid)
     if t==h5py.h5d.DatasetID:
@@ -115,20 +83,17 @@ class HdfImageFrame(wx.Frame):
 
     #img = ax.imshow(np.random.rand(10,10),interpolation='nearest')
     canvas = FigureCanvas(self, -1, fig)
-    #canvas.mpl_connect('motion_notify_event', self.OnMotion)
-    #canvas.mpl_connect('button_press_event',   self.OnMouse) 
-    #canvas.mpl_connect('button_release_event', self.OnMouse) 
-    #canvas.mpl_connect('scroll_event', self.OnMouse) 
+    canvas.mpl_connect('motion_notify_event', self.OnMotion)
+    canvas.mpl_connect('button_press_event',   self.OnBtnPress) 
+    canvas.mpl_connect('button_release_event', self.OnBtnRelease) 
+    canvas.mpl_connect('scroll_event', self.OnBtnScroll)
+    canvas.mpl_connect('key_press_event',self.OnKeyPress) 
 
     sizer = wx.BoxSizer(wx.VERTICAL)
     sizer.Add(canvas, 1, wx.LEFT | wx.TOP | wx.GROW)
     self.SetSizer(sizer)
 
-    #self.fig=fig
     toolbar=ut.AddToolbar(canvas,sizer)  
-    statusBar = wx.StatusBar(self, -1)
-    statusBar.SetFieldsCount(1)
-    sizer.Add(statusBar, 0, wx.LEFT | wx.EXPAND)
 
     wxAxCtrlLst=[]
     l=len(data.shape)
@@ -143,31 +108,51 @@ class HdfImageFrame(wx.Frame):
       wxAxCtrl.SetCallback(HdfImageFrame.OnSetView,wxAxCtrl)
 
     sl=ut.GetSlice(idxXY,data.shape,wxAxCtrlLst)
-    #img = ax.imshow(data[sl],interpolation='nearest',cmap=mpl.cm.jet, vmin=0, vmax=10)
-    img = ax.imshow(data[sl],interpolation='nearest',cmap=mpl.cm.jet, vmin=0, vmax=64000)
+    avg=np.average(data[sl]); std=np.std(data[sl])
+    vmin=np.min(data[sl]);vmax=np.max(data[sl])
+    vmin=max(vmin,avg-3*std);vmax=min(vmax,avg+3*std)
+    img = ax.imshow(data[sl],interpolation='nearest',cmap=mpl.cm.jet, vmin=vmin, vmax=vmax)
     colBar=fig.colorbar(img,orientation='vertical')
-    colBar = DraggableColorbar(colBar,img)
-    colBar.connect()
       
-    self.Fit()   
+    #self.Fit()   
     self.Centre()
     
     self.ax=ax
     self.colBar=colBar
+    self.colCycle = sorted([i for i in dir(plt.cm) if hasattr(getattr(plt.cm,i),'N')])
+    self.colIndex = self.colCycle.index(colBar.get_cmap().name)
+
+    self.BuildMenu()
     self.img=img
     self.canvas=canvas
     self.sizer=sizer
     self.toolbar=toolbar
-    self.statusBar=statusBar
     self.data=data
     self.idxXY=idxXY
     self.wxAxCtrlLst=wxAxCtrlLst
-  
+ 
+  def BuildMenu(self):
+    mnBar = wx.MenuBar()
+
+    #-------- Edit Menu --------
+    mn = wx.Menu()
+    mnItem=mn.Append(wx.ID_ANY, 'Setup Colormap', 'Setup the color mapping ');self.Bind(wx.EVT_MENU, self.OnColmapSetup, mnItem)
+    mnItem=mn.Append(wx.ID_ANY, 'Linear Mapping', 'Use a linear values to color mapping ');self.Bind(wx.EVT_MENU, self.OnMapLin, mnItem)
+    mnItem=mn.Append(wx.ID_ANY, 'Log Mapping', 'Use a logarithmic values to color mapping ');self.Bind(wx.EVT_MENU, self.OnMapLog, mnItem)
+    mnBar.Append(mn, '&Edit')
+    mn = wx.Menu()
+    mnItem=mn.Append(wx.ID_ANY, 'Help', 'How to use the image viewer');self.Bind(wx.EVT_MENU, self.OnHelp, mnItem)
+    mnBar.Append(mn, '&Help')
+
+    self.SetMenuBar(mnBar)
+    self.CreateStatusBar()      
+        
   def SetIdxXY(self,x,y):
     self.idxXY=(x,y)
  
   @staticmethod
   def OnSetView(usrData,value,msg):
+    'called when a slice is selected with the slider controls'
     imgFrm=usrData.slider.Parent
     #imgFrm.img.set_array(imgFrm.data[usrData.value,...])
     data=imgFrm.data
@@ -175,7 +160,54 @@ class HdfImageFrame(wx.Frame):
     imgFrm.img.set_array(data[sl])
     imgFrm.canvas.draw()
     pass
-    
+
+  def OnHelp(self,event):
+    msg='''to change the image selection:
+use the toolbar at the bottom to pan and zoom the image
+use the scrollbars at the bottom (if present) to select an other slice
+
+to change the colorscale:
+drag with left mouse button to move the colorbar up and down
+drag with right mouse button to zoom in/out the colorbar at a given point
+use mouse weel to zoom in/out the colorbar at a given point
+double click left mouse button to set maximum and minimun colorbar values
+use cursor up and down to use a different colormap'''
+    dlg = wx.MessageDialog(self, msg, 'Help', wx.OK|wx.ICON_INFORMATION)
+    dlg.ShowModal()
+    dlg.Destroy()
+  
+  def OnColmapSetup(self,event):
+    dlg=DlgColBarSetup(self)
+    if dlg.ShowModal()==wx.ID_OK:
+      pass
+    dlg.Destroy()
+
+  def OnMapLin(self,event):
+    img=self.img
+    data=img.get_array()
+    colBar=self.colBar
+    avg=np.average(data); std=np.std(data)
+    vmin=np.min(data);vmax=np.max(data)
+    vmin=max(vmin,avg-3*std);vmax=min(vmax,avg+3*std)
+    #print vmin, vmax
+    colBar.norm = mpl.colors.Normalize(vmin, vmax)
+    self.img.set_norm(colBar.norm)
+    colBar.patch.figure.canvas.draw()      
+
+  def OnMapLog(self,event):
+    #print self.colBar.norm,self.img.norm
+    img=self.img
+    data=img.get_array()
+    colBar=self.colBar
+    img.cmap._init();bg=img.cmap._lut[0].copy();bg[:-1]/=4
+    self.ax.set_axis_bgcolor(bg)
+    avg=np.average(data); std=np.std(data)
+    vmin=1;vmax=avg+3*std
+    colBar.norm = mpl.colors.LogNorm(vmin,vmax)
+    #print vmin, vmax
+    self.img.set_norm(colBar.norm)
+    colBar.patch.figure.canvas.draw()      
+   
   def OnMotion(self,event):
     #print event,event.x,event.y,event.inaxes,event.xdata,event.ydata
     if event.inaxes==self.ax:
@@ -187,31 +219,102 @@ class HdfImageFrame(wx.Frame):
         pass
       else:
         #print x,y,v
-        self.statusBar.SetStatusText( "x= %d y=%d val=%g"%(x,y,v),0)
+        self.SetStatusText( "x= %d y=%d val=%g"%(x,y,v),0)
     elif event.inaxes==self.colBar.ax:
-      x=int(round(event.xdata))
-      y=event.y
-      y0=event.ydata
-      y1=int(round(event.ydata))
-      self.statusBar.SetStatusText( "OTHER %d %f %d"%(y,y0,y1),0)
+      colBar=self.colBar
+      pt=colBar.ax.bbox.get_points()[:,1]
+      nrm=colBar.norm
+      vmin,vmax,p0,p1,pS = (nrm.vmin,nrm.vmax,pt[0],pt[1],event.y)
+      if isinstance(colBar.norm,mpl.colors.LogNorm):#type(colBar.norm)==mpl.colors.LogNorm does not work...
+        vS=0
+      else:#scale around point
+        vS=vmin+(vmax-vmin)/(p1-p0)*(pS-p0)
+      self.SetStatusText( "Colormap Value %d (drag to scale)"%(vS),0)
+    try:
+      vmin,vmax,p0,p1,pS=self.colBarPressed
+    except AttributeError:
+      return
+      #if event.inaxes != self.cbar.ax: return
+    colBar=self.colBar
+    #print vmin,vmax,p0,p1,pS,type(colBar.norm)
+    #print 'x0=%f, xpress=%f, event.xdata=%f, dx=%f, x0+dx=%f'%(x0, xpress, event.xdata, dx, x0+dx)
+    
+    if isinstance(colBar.norm,mpl.colors.LogNorm):#type(colBar.norm)==mpl.colors.LogNorm does not work...
+      if event.button==1:
+        #colBar.norm.vmin=.1
+        colBar.norm.vmax=vmax*np.exp((pS-event.y)/100)
+        #scale= np.exp((event.y-pS)/100)       
+    elif event.button==1:#move top,bottom,both
+      pD = event.y - pS
+      vD=(vmax-vmin)/(p1-p0)*(pS-event.y)
+      colBar.norm.vmin = vmin+vD
+      colBar.norm.vmax = vmax+vD
+    elif event.button==3:#scale around point
+      scale= np.exp((pS-event.y)/100)
+      vS=vmin+(vmax-vmin)/(p1-p0)*(pS-p0)
+      #print scale,vS
+      colBar.norm.vmin = vS-scale*(vS-vmin)
+      colBar.norm.vmax = vS-scale*(vS-vmax)
+    self.img.set_norm(colBar.norm)#force image to redraw
+    colBar.patch.figure.canvas.draw()      
+      
+  def OnBtnPress(self, event):
+    """on button press we will see if the mouse is over us and store some data"""
+    #print dir(event.guiEvent)
+    if event.inaxes == self.colBar.ax:
+      #if event.guiEvent.LeftDClick()==True:
+      #    print dlg
+      pt=self.colBar.ax.bbox.get_points()[:,1]
+      nrm=self.colBar.norm
+      self.colBarPressed = (nrm.vmin,nrm.vmax,pt[0],pt[1],event.y)
+      #self.colBarPressed = event.x, event.y
+      #print self.colBarPressed
+      #self.OnMouse(event)
+
+  def OnBtnRelease(self, event):
+    """on release we reset the press data"""
+    #self.OnMouse(event)
+    try: del self.colBarPressed
+    except AttributeError: pass
+  
+  def OnBtnScroll(self, event):
+    #self.OnMouse(event)
+    colBar=self.colBar
+    if event.inaxes==colBar.ax:
+      pt=colBar.ax.bbox.get_points()[:,1]
+      nrm=colBar.norm
+      vmin,vmax,p0,p1,pS = (nrm.vmin,nrm.vmax,pt[0],pt[1],event.y)
+      if isinstance(colBar.norm,mpl.colors.LogNorm):#type(colBar.norm)==mpl.colors.LogNorm does not work...
+        scale= np.exp((-event.step)/10)
+        colBar.norm.vmax=vmax*scale
+      else:#scale around point
+        scale= np.exp((-event.step)/10)
+        vS=vmin+(vmax-vmin)/(p1-p0)*(pS-p0)
+        #print scale,vS
+        colBar.norm.vmin = vS-scale*(vS-vmin)
+        colBar.norm.vmax = vS-scale*(vS-vmax)
+      self.img.set_norm(colBar.norm)#force image to redraw
+      colBar.patch.figure.canvas.draw()        
+
+  def OnKeyPress(self, event):
+    colCycle=self.colCycle
+    colBar=self.colBar
+    if event.key=='down':
+      self.colIndex += 1
+    elif event.key=='up':
+      self.colIndex -= 1
+    self.colIndex%=len(colCycle)
+    cmap = colCycle[self.colIndex]
+    colBar.set_cmap(cmap)
+    colBar.draw_all()
+    self.img.set_cmap(cmap)
+    self.img.get_axes().set_title(cmap)
+    colBar.patch.figure.canvas.draw()
 
   def OnMouse(self, event):
     for k in dir(event):
       if k[0]!='_':
         print k,getattr(event,k)
-    if event.name=='scroll_event' and event.inaxes==self.colBar.ax:
-      colBar=self.colBar
-      img=self.img
-      if event.step>0:
-        #colBar.set_clim(100,500)
-        img.set_clim(0,100)
-      else:
-        img.set_clim(0,50000)
-        #colBar.set_clim(0,50000)
-      colBar.changed()
-      img.changed()
-      #colBar.update_ticks()
-      print colBar.get_clim()
      
 if __name__ == '__main__':
   import os,sys,argparse #since python 2.7
