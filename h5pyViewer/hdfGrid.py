@@ -15,6 +15,31 @@ import numpy as N
 import utilities as ut
 
 #http://wxpython-users.1045709.n5.nabble.com/filling-a-wxgrid-td2348720.html
+class Table1DArray(wx.grid.PyGridTableBase):
+  def __init__(self, data):
+    wx.grid.PyGridTableBase.__init__(self)
+    #ut.StopWatch.Log('DBG 1')
+    self.data = data
+    #ut.StopWatch.Log('DBG 2')
+    #ut.StopWatch.Log('DBG 3')
+
+  def GetRowLabelValue(self,idx):
+    return idx
+  
+#  def GetColLabelValue(self,idx):
+#    return 
+  
+  def GetNumberRows(self):
+    #ut.StopWatch.Log('GetNumberRows')
+    return self.data.shape[0]
+
+  def GetNumberCols(self):
+    #ut.StopWatch.Log('GetNumberCols')
+    return 1
+
+  def GetValue(self, row, col):
+    #ut.StopWatch.Log('GetValue %d %d'%(row,col))
+    return self.data[row]
 
 class Table2DArray(wx.grid.PyGridTableBase):
   def __init__(self, data):
@@ -24,8 +49,9 @@ class Table2DArray(wx.grid.PyGridTableBase):
     #ut.StopWatch.Log('DBG 2')
     #ut.StopWatch.Log('DBG 3')
 
-  #def GetRowLabelValue(self,idx):
-  #  return idx
+  def GetRowLabelValue(self,idx):
+    return idx
+  
   def GetColLabelValue(self,idx):
     return idx
   
@@ -49,8 +75,9 @@ class TableCompound(wx.grid.PyGridTableBase):
     #ut.StopWatch.Log('DBG 2')
     #ut.StopWatch.Log('DBG 3')
 
-  #def GetRowLabelValue(self,idx):
-  #  return idx
+  def GetRowLabelValue(self,idx):
+    return idx
+  
   def GetColLabelValue(self,idx):
     return self.view.dtype.names[idx]
   
@@ -116,7 +143,6 @@ class HdfGridFrame(wx.Frame):
     
     tbl=grid.GetTable()
 
-      
     sizer = wx.BoxSizer(wx.VERTICAL)
     sizer.Add(grid, 1, wx.EXPAND)
 
@@ -126,25 +152,29 @@ class HdfGridFrame(wx.Frame):
     else:
       wxAxCtrlLst=[]
       l=len(data.shape)
-      idxXY=(l-2,l-1)
-      #idxXY=(l-1,l-2)
-      for idx,l in enumerate(data.shape):
-        if idx in idxXY:
-          continue 
-        wxAxCtrl=ut.SliderGroup(pan, label='Axis:%d'%idx,range=(0,l-1))
-        wxAxCtrl.idx=idx
-        wxAxCtrlLst.append(wxAxCtrl)
-        sizer.Add(wxAxCtrl.sizer, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, border=5)
-        wxAxCtrl.SetCallback(Grid.OnSetView,wxAxCtrl)
-      
-      sl=ut.GetSlice(idxXY,data.shape,wxAxCtrlLst)
-  
-      tbl = Table2DArray(data)
-      tbl.idxXY=idxXY
-      if idxXY[0]<idxXY[1]:
-        tbl.view = tbl.data[sl]
+      if l==1:
+        tbl = Table1DArray(data)
+        tbl.view = tbl.data
       else:
-        tbl.view = tbl.data[sl].T
+        idxXY=(l-2,l-1)
+        #idxXY=(l-1,l-2)
+        for idx,l in enumerate(data.shape):
+          if idx in idxXY:
+            continue 
+          wxAxCtrl=ut.SliderGroup(pan, label='Axis:%d'%idx,range=(0,l-1))
+          wxAxCtrl.idx=idx
+          wxAxCtrlLst.append(wxAxCtrl)
+          sizer.Add(wxAxCtrl.sizer, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, border=5)
+          wxAxCtrl.SetCallback(Grid.OnSetView,wxAxCtrl)
+        
+        sl=ut.GetSlice(idxXY,data.shape,wxAxCtrlLst)
+    
+        tbl = Table2DArray(data)
+        tbl.idxXY=idxXY
+        if idxXY[0]<idxXY[1]:
+          tbl.view = tbl.data[sl]
+        else:
+          tbl.view = tbl.data[sl].T
       self.wxAxCtrlLst=wxAxCtrlLst
     grid.SetTable (tbl, True)   
        

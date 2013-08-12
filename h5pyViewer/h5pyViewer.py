@@ -16,6 +16,26 @@ from hdfGrid import *
 from hdfAttrib import *
 from hdfImage import  *
 
+
+class AboutFrame(wx.Frame):
+  def __init__(self,parent):
+    wx.Frame.__init__(self,parent,-1,'About h5pyViewer',size=(300,330))
+    path=__file__
+    try:path=os.readlink(path) #follow symbolic linc
+    except OSError as e:pass
+    imgDir=os.path.join(os.path.dirname(path),'images')
+    icon = wx.Icon(os.path.join(imgDir,'h5pyViewer.ico'), wx.BITMAP_TYPE_ICO)
+    self.SetIcon(icon)
+    self.Centre()
+    panel=wx.Panel(self,-1)
+    import pkg_resources
+
+    v=pkg_resources.get_distribution("h5pyViewer")
+    s='Version:'+str(v)+'\n(c) www.psi.ch\n Author: Thierry Zamofing\n thierry.zamofing@psi.ch'
+
+    st0=wx.StaticText(panel,-1,s,(30,10))
+    bmp = wx.StaticBitmap(panel,-1,wx.Bitmap(os.path.join(imgDir,'splash1.png'), wx.BITMAP_TYPE_ANY ), (30,st0.Position[1]+st0.Size[1]+10))
+
 class HdfTreePopupMenu(wx.Menu):
   def __init__(self, wxObjSrc):
     wx.Menu.__init__(self)
@@ -24,7 +44,7 @@ class HdfTreePopupMenu(wx.Menu):
     self.AddMenu(self.OnShowData,"Show Data")
     self.AddMenu(self.OnShowImage,"Show Image")
     self.AddMenu(self.OnShell,"Python Shell")
-    self.AddMenu(self.OnItem1,"Item One")
+    self.AddMenu(self.OnPrintProperties,"Print Properties")
     self.AddMenu(self.OnItem2,"Item Two")
     self.AddMenu(self.OnItem3,"Item Three")
 
@@ -73,11 +93,14 @@ fid: hdf5 file object
 lbl: label of selected hdf5 object
 hid: selected hdf5 object
 
-Example:
+#Examples:
 import h5py
 ds=h5py.Dataset(hid)
-ds
 ds[1,:,:]
+
+#using user defined modules
+import userSample as us;reload(us);us.test1(hid)
+
 '''
     shell=wx.py.shell.Shell(frame, introText=introText,locals=loc)
     frame.Show(True)
@@ -91,8 +114,12 @@ ds[1,:,:]
     #  'hid=wxTree.GetPyData(wxNode)']:
     #  shell.run(cmd, prompt=False)
 
-  def OnItem1(self, event):
-    print "Item One selected obj %s"%self.lbl
+  def OnPrintProperties(self, event):
+    wxTree,wxNode=self.wxObjSrc
+    lbl=wxTree.GetItemText(wxNode)
+    hid=wxTree.GetPyData(wxNode)
+    print HdfViewerFrame.GetPropertyStr(wxTree,wxNode)
+    
   def OnItem2(self, event):
     print "Item Two selected obj %s"%self.lbl
   def OnItem3(self, event):
@@ -119,7 +146,11 @@ class HdfViewerFrame(wx.Frame):
 
   def __init__(self, parent, title):
     wx.Frame.__init__(self, parent, title=title, size=wx.Size(650, 350))
-
+    path=__file__
+    try:path=os.readlink(path) #follow symbolic linc
+    except OSError as e:pass
+    icon = wx.Icon(os.path.join(os.path.dirname(path),'images','h5pyViewer.ico'), wx.BITMAP_TYPE_ICO)
+    self.SetIcon(icon)
     wxSplt = wx.SplitterWindow(self, -1)
     wxTree = HdfTreeCtrl(wxSplt, 1, wx.DefaultPosition, (-1,-1),  wx.TR_HAS_BUTTONS)
     wxTree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelChanged, id=1)
@@ -155,6 +186,10 @@ class HdfViewerFrame(wx.Frame):
     print 'OnCloseWindow'
     self.Destroy()
     
+  def OnAbout(self,event):
+    frame=AboutFrame(self)
+    frame.Show()
+    
   def BuildMenu(self):
     #http://wiki.wxpython.org/AnotherTutorial#wx.MenuBar
     mnBar = wx.MenuBar()
@@ -162,9 +197,9 @@ class HdfViewerFrame(wx.Frame):
     #-------- File Menu --------
     mn = wx.Menu()
     mnItem=mn.Append(wx.ID_OPEN, '&Open', 'Open a new document');self.Bind(wx.EVT_MENU, self.OnOpen, mnItem)
-    mnSub = wx.Menu()
-    mnItem=mnSub.Append(wx.ID_ANY, 'SubMenuEntry', 'My SubMenuEntry')
-    mn.AppendMenu(wx.ID_ANY, 'SubMenu', mnSub)   
+    #mnSub = wx.Menu()
+    #mnItem=mnSub.Append(wx.ID_ANY, 'SubMenuEntry', 'My SubMenuEntry')
+    #mn.AppendMenu(wx.ID_ANY, 'SubMenu', mnSub)   
     mn.AppendSeparator()
     mnItem=mn.Append(wx.ID_EXIT, '&Quit', 'Quit the Application');self.Bind(wx.EVT_MENU, self.OnCloseWindow, mnItem)
     mnBar.Append(mn, '&File')
@@ -172,13 +207,13 @@ class HdfViewerFrame(wx.Frame):
     self.Bind(wx.EVT_CLOSE, self.OnCloseWindow)
 
     #-------- Edit Menu --------
-    mn = wx.Menu()
-    mnBar.Append(mn, '&Edit')
+    #mn = wx.Menu()
+    #mnBar.Append(mn, '&Edit')
 
     #-------- Help Menu --------
     mn = wx.Menu()
-    mnItem=mn.Append(wx.ID_HELP,'Help','Application Help')
-    mnItem=mn.Append(wx.ID_ABOUT,'About','Application About')
+    #mnItem=mn.Append(wx.ID_HELP,'Help','Application Help')
+    mnItem=mn.Append(wx.ID_ABOUT,'About','Application About');self.Bind(wx.EVT_MENU, self.OnAbout, mnItem)
     mnBar.Append(mn, '&Help')
           
     #mn.AppendSeparator()
@@ -188,48 +223,88 @@ class HdfViewerFrame(wx.Frame):
     self.SetMenuBar(mnBar)
     self.CreateStatusBar()   
 
+  @staticmethod
+  def GetPath(wxTree,wxNode):
+    if wxTree.GetRootItem()==wxNode:
+      hid=wxTree.GetPyData(wxNode)
+      return hid.name
+    wxNodeParent=wxTree.GetItemParent(wxNode)
+    if wxTree.GetRootItem()==wxNodeParent:
+      return wxTree.GetItemText(wxNode)
+    else:
+      return HdfViewerFrame.GetPath(wxTree,wxNodeParent)+'/'+wxTree.GetItemText(wxNode)
+
+  @staticmethod
+  def GetPropertyStr(wxTree,wxNode):
+    
+    path=HdfViewerFrame.GetPath(wxTree,wxNode)
+    
+    hidStr=wxTree.GetItemText(wxNode)
+    hid=wxTree.GetPyData(wxNode)
+    #o=wxTree.GetItemData(wxNode)
+    #print o.Data,wxTree.GetPyData(wxNode)
+    #if type(gid)==h5py.h5g.GroupID:
+    txt=path+'\n'
+    objInf=h5py.h5o.get_info(hid)
+    t=type(hid)
+    #print t,hid.id,objInf.fileno, objInf.rc, objInf.type, objInf.addr, objInf.hdr       
+    txt+=type(hid).__name__+':%d\n'%hid.id     
+    txt+='addr:%d fileno:%d refCnt:%d\n'%(objInf.addr,objInf.fileno, objInf.rc)      
+    try:
+      wxNodeParent=wxTree.GetItemParent(wxNode)
+      txtParent=wxTree.GetItemText(wxNode)
+      dataParent=wxTree.GetPyData(wxNode)
+      gid=wxTree.GetPyData(wxNodeParent)
+      softLnk=gid.get_linkval(hidStr)
+    except BaseException as e:
+      pass
+    else:
+      txt+='Soft Link:'+softLnk+'\n'
+    try: numAttr=h5py.h5a.get_num_attrs(hid)
+    except ValueError as e:
+      pass
+    else:
+      txt+='Attributes:%d\n'%numAttr
+    if t==h5py.h5g.GroupID:
+      pass
+    elif t==h5py.h5d.DatasetID:
+      txt+='shape: '+str(hid.shape)+'\n'
+      tt=hid.get_type()
+      ttt=type(tt)
+      if ttt==h5py.h5t.TypeCompoundID:
+        txt+='type: Compound\n'
+      elif ttt==h5py.h5t.TypeStringID:
+        sz=tt.get_size()
+        txt+='type: String (length %d)\n'%sz
+      else:
+        txt+='type: '+str(tt.dtype)+'\n'
+
+    
+      pl=hid.get_create_plist()
+      txFcn=(
+       ('chunk',h5py.h5p.PropDCID.get_chunk),
+       ('fill time',   h5py.h5p.PropDCID.get_fill_time),
+       ('alloc_time',  h5py.h5p.PropDCID.get_alloc_time),
+       #('class',       h5py.h5p.PropDCID.get_class),
+       #('fill_value',  h5py.h5p.PropDCID.get_fill_value),
+       #('filter',      h5py.h5p.PropDCID.get_filter),
+       #('filter_by_id',h5py.h5p.PropDCID.get_filter_by_id),
+       ('layout',      h5py.h5p.PropDCID.get_layout),
+       ('nfilters',    h5py.h5p.PropDCID.get_nfilters),
+       #('obj_track_times', h5py.h5p.PropDCID.get_obj_track_times),
+       )
+      for tx,func in txFcn:
+        try: v=func(pl)
+        except ValueError as e: pass
+        else:txt+=tx+':'+str(v)+'\n'
+      if hid.shape==(1,):
+        data=h5py.Dataset(hid)
+        txt+='value:'+str(data[0])+'\n'
+    return txt
+    
   def OnSelChanged(self, event):
-      wxTree=self.wxTree
       wxNode =  event.GetItem()
-      txt=wxTree.GetItemText(wxNode)
-      data=wxTree.GetPyData(wxNode)
-      #o=wxTree.GetItemData(wxNode)
-      #print o.Data,wxTree.GetPyData(wxNode)
-      #if type(gid)==h5py.h5g.GroupID:
-      if data:
-        t=type(data)
-        if t==h5py.h5g.GroupID:
-          pass
-        elif t==h5py.h5d.DatasetID:
-          l=[txt]
-          l.append('shape: '+str(data.shape))
-          tt=data.get_type()
-          if type(tt)==h5py.h5t.TypeCompoundID:
-            l.append('type: Compound')
-          else:
-            l.append('type: '+str(tt.dtype))
-          
-          pl=data.get_create_plist()
-          txFcn=(
-           ('chunk',h5py.h5p.PropDCID.get_chunk),
-           ('fill time',h5py.h5p.PropDCID.get_fill_time),
-           ('alloc_time',  h5py.h5p.PropDCID.get_alloc_time),
-           #('class',       h5py.h5p.PropDCID.get_class),
-           ('fill_time',   h5py.h5p.PropDCID.get_fill_time),
-           #('fill_value',  h5py.h5p.PropDCID.get_fill_value),
-           #('filter',      h5py.h5p.PropDCID.get_filter),
-           #('filter_by_id',h5py.h5p.PropDCID.get_filter_by_id),
-           ('layout',      h5py.h5p.PropDCID.get_layout),
-           ('nfilters',    h5py.h5p.PropDCID.get_nfilters),
-           #('obj_track_times', h5py.h5p.PropDCID.get_obj_track_times),
-           )
-          for tx,func in txFcn:
-            try: v=func(pl)
-            except ValueError as e: pass
-            else: l.append(tx+': '+str(v))
-                    
-          txt='\n'.join(l)
-        print t,data.id
+      txt=HdfViewerFrame.GetPropertyStr(self.wxTree,wxNode)            
       self.display.SetLabel(txt)
 
   def OnMenu(self, event):

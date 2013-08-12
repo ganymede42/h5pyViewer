@@ -17,24 +17,39 @@ class HdfTreeCtrl(wx.TreeCtrl):
     wx.TreeCtrl.__init__(self, parent, *args, **kwargs)
     il = wx.ImageList(16, 16)
     rootDir=os.path.join(os.path.dirname(__file__),'images')
-    home    = il.Add(wx.Image(rootDir+"/home.png", wx.BITMAP_TYPE_PNG).ConvertToBitmap())
-    folder  = il.Add(wx.Image(rootDir+"/folder.png", wx.BITMAP_TYPE_PNG).ConvertToBitmap())
-    dataset = il.Add(wx.Image(rootDir+"/dataset.png", wx.BITMAP_TYPE_PNG).ConvertToBitmap())
+    for img in ('home','folder','dataset','compound','text'):
+      il.Add(wx.Image(rootDir+'/%s.png'%img, wx.BITMAP_TYPE_PNG).ConvertToBitmap())
     self.AssignImageList(il)
 
-  def _ShowHirarchy(self,wxParent,gidParent,lvl):
-    for gidStr in h5py.h5g.GroupIter(gidParent):
-      gid = h5py.h5o.open(gidParent,gidStr)
-      t=type(gid)
+  def _ShowHirarchy(self,wxParent,gid,lvl):
+    #numObj=gid.get_num_objs()
+    #for idx in range(numObj):
+    #  hidStr=get_objname_by_idx(idx)
+    #  get_objtype_by_idx(INT idx)
+    for hidStr in h5py.h5g.GroupIter(gid):
+      hid = h5py.h5o.open(gid,hidStr)
+      #try:
+      #  gid.get_linkval(hidStr)
+      #except BaseException as e:
+      #  pass
+      #else:
+      #  print hidStr,'is a sym link'
+      t=type(hid)
       if t==h5py.h5g.GroupID:
         image=1
-      elif t==h5py.h5d.DatasetID:     
-        image=2
+      elif t==h5py.h5d.DatasetID:
+        tt=type(hid.get_type())
+        if tt==h5py.h5t.TypeCompoundID:
+          image=3
+        elif tt==h5py.h5t.TypeStringID:
+          image=4
+        else:
+          image=2
       else:
         image=-1
-      wxNode = self.AppendItem(wxParent, gidStr,image=image,data=wx.TreeItemData(gid))
+      wxNode = self.AppendItem(wxParent, hidStr,image=image,data=wx.TreeItemData(hid))
       if t==h5py.h5g.GroupID:
-        self._ShowHirarchy(wxNode,gid,lvl+1)
+        self._ShowHirarchy(wxNode,hid,lvl+1)
 
   def ShowHirarchy(self,hid):
     self.hid=hid
@@ -46,7 +61,7 @@ class HdfTreeCtrl(wx.TreeCtrl):
     else:
       txt='root'
     self.DeleteAllItems()
-    wxNode = self.AddRoot(txt,image=0)
+    wxNode = self.AddRoot(txt,image=0,data=wx.TreeItemData(hid))
     self._ShowHirarchy(wxNode,hid,0)
 
     self.ExpandAll()

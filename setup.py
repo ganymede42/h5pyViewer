@@ -46,15 +46,35 @@ import sys,os,platform,subprocess
 #  upload           upload binary package to PyPI
 #  check            perform some checks on the package
 
-def getVersion(forceUpdate=False):
-  argv=sys.argv
-  p = subprocess.Popen('git rev-list HEAD', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-  #p = subprocess.Popen('git log --pretty=%h', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-  retval = p.wait()
-  res=p.stdout.readlines()
-  ver=len(res)
-  ver='0.0.0.'+str(ver)
-  gitcmt=res[0][:7]
+def getVersion():
+  #for dirname, dirnames, filenames in os.walk('.'):
+  #  for subdirname in dirnames:
+  #    print os.path.join(dirname, subdirname)
+  #  for filename in filenames:
+  #    print os.path.join(dirname, filename)
+
+  fn='./PKG-INFO'
+  if os.access(fn, os.R_OK):
+    sys.stdout.write('getVersion() -> Parsing '+fn)
+    fo=open(fn,'r')
+    for ln in fo.readlines():
+      if ln.startswith('Version:'):
+        ver=re.match('Version:\s*(\S*)', ln).group(1)
+      elif ln.startswith('Summary:'):
+        #print ln
+        gitcmt=re.search('\(git:(.*)\)', ln).group(1)
+    fo.close()
+  else:
+    argv=sys.argv
+    p = subprocess.Popen('git rev-list HEAD', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    #p = subprocess.Popen('git log --pretty=%h', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    retval = p.wait()
+    res=p.stdout.readlines()
+    ver=len(res)
+    ver='0.0.0.'+str(ver)
+    gitcmt=res[0][:7]
+    sys.stdout.write('getVersion() -> using git command')
+  print ':'+ver+':'+gitcmt
   return (ver,gitcmt)
 
 def runSetup(**kv):
@@ -75,7 +95,7 @@ def runSetup(**kv):
         #'py_modules'  :['libDetXR', 'cbfParser'],
         'packages'    :['h5pyViewer'],
         #'package_dir' :{'h5pyViewer':'.'},
-        'package_data':{'h5pyViewer': ['images/*.png']},
+        'package_data':{'h5pyViewer': ['images/*.png','images/*.ico']},
         #'requires' requires: h5py==2.0.1 libDetXR==0.0.0.6 numpy==1.7.1 matplotlib==1.2.0 
         'requires' : ['ctypes','h5py','numpy','matplotlib','libDetXR']
       }
