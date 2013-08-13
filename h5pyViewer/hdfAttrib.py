@@ -12,6 +12,15 @@ implements an attribute view of a hdf5 dataset.
 import os
 import wx,h5py
 import numpy as np
+from hdfGrid import *
+
+def GetAttrVal(aid):
+  rtdt = h5py._hl.dataset.readtime_dtype(aid.dtype, []) 
+  arr = np.ndarray(aid.shape, dtype=rtdt, order='C')
+  aid.read(arr)
+  if len(arr.shape) == 0:
+    return arr[()]
+  return arr
 
 class HdfAttrListCtrl(wx.ListCtrl):
   def __init__(self, parent, *args, **kwargs):
@@ -24,55 +33,57 @@ class HdfAttrListCtrl(wx.ListCtrl):
     self.SetColumnWidth(1, 440)
     self.SetColumnWidth(2, 60)
     self.SetColumnWidth(3, 160)
+    self.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnActivateItem, self)
+    
   def ShowAttr(self,hid):
     self.hid=hid
-    t=type(hid)
-    if t==h5py.h5d.DatasetID:
-      obj=h5py.Dataset(hid)
-    elif t==h5py.h5g.GroupID:
-      obj=h5py.Group(hid)
-    else:
-      raise(BaseException('cant handle'))
     self.DeleteAllItems()
-    idx=0
-    for (k,v) in obj.attrs.iteritems():
-      if k.startswith('_u_'):
+    numAttr=h5py.h5a.get_num_attrs(hid)
+    for idxAttr in range(numAttr):
+      aid=h5py.h5a.open(hid,index=idxAttr)
+      if aid.name.startswith('_u_'):
         continue
-      self.InsertStringItem(idx, k)
-      self.SetStringItem(idx, 1, str(v))
+      idxItem=self.InsertStringItem(idxAttr, aid.name)
+      val=GetAttrVal(aid)
+      self.SetStringItem(idxItem, 1, str(val))
+      #print idxAttr,idxItem,aid,aid.name,val
       try:
-        unit=obj.attrs['_u_'+k]
+        aidUnit=h5py.h5a.open(hid,'_u_'+aid.name)
       except KeyError as e:
         pass
       else:
-        self.SetStringItem(idx, 2, unit)
-      t=type(v)
+        unit=GetAttrVal(aidUnit)
+        self.SetStringItem(idxItem, 2, unit)  
+      t=type(val)
       if t==np.ndarray:
-        tStr=str(v.dtype)+str(v.shape)
+        tStr=str(val.dtype)+str(val.shape)
         if tStr[-2]==',':
           tStr=tStr[:-2]+')'
       else:
-        tStr=type(v).__name__
-        try: tStr+='(%d)'%len(v)
+        tStr=type(val).__name__
+        try: tStr+='(%d)'%len(val)
         except TypeError as e: pass
-      self.SetStringItem(idx, 3, tStr)
-      idx+=1
+      self.SetStringItem(idxItem, 3, tStr)
+      #http://wiki.wxpython.org/ListControls
+      #only intergers can be associate
+      self.SetItemData(idxItem, idxAttr)    
 
-    #print h5py.h5a.get_num_attrs(hid)
-    #def iterCallback(name, *args):
-      #print name, args
-      #attr = h5py.h5a.open(hid, name)
-      #t=type(attr)
-      #tid = attr.get_type()
-      #rtdt = h5py.Dataset.readtime_dtype(attr.dtype, [])   
-      #arr = np.ndarray(attr.shape, dtype=rtdt, order='C')
-      #attr.read(arr)
-    #h5py.h5a.iterate(hid, iterCallback)
-    pass
+  def OnActivateItem(self,event):
+    hid=self.hid
+    aid=h5py.h5a.open(hid,index=event.Data)
+    val=GetAttrVal(aid)
+    if type(val)!=np.ndarray:
+      print val
+      return    
+    frame=HdfGridFrame(self,aid.name,val)
+    frame.Show(True)  
 
 class HdfAttribFrame(wx.Frame):
   def __init__(self, parent,lbl,hid):
     wx.Frame.__init__(self, parent, title=lbl, size=wx.Size(800, 350))
+    imgDir=ut.Path.GetImage()
+    icon = wx.Icon(os.path.join(imgDir,'h5pyViewer.ico'), wx.BITMAP_TYPE_ICO)
+    self.SetIcon(icon)
     self.wxLstCtrl=HdfAttrListCtrl(self)
     self.wxLstCtrl.ShowAttr(hid)  
     self.Centre()

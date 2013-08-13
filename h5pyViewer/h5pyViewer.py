@@ -15,15 +15,12 @@ from hdfTree import *
 from hdfGrid import *
 from hdfAttrib import *
 from hdfImage import  *
-
+import utilities as ut
 
 class AboutFrame(wx.Frame):
   def __init__(self,parent):
     wx.Frame.__init__(self,parent,-1,'About h5pyViewer',size=(300,330))
-    path=__file__
-    try:path=os.readlink(path) #follow symbolic linc
-    except OSError as e:pass
-    imgDir=os.path.join(os.path.dirname(path),'images')
+    imgDir=ut.Path.GetImage()
     icon = wx.Icon(os.path.join(imgDir,'h5pyViewer.ico'), wx.BITMAP_TYPE_ICO)
     self.SetIcon(icon)
     self.Centre()
@@ -79,6 +76,9 @@ class HdfTreePopupMenu(wx.Menu):
   def OnShell(self, event):
     wxTree,wxNode=self.wxObjSrc
     frame = wx.Frame(wxTree, -1, "wxPyShell",size=wx.Size(800, 500))
+    imgDir=ut.Path.GetImage()
+    icon = wx.Icon(os.path.join(imgDir,'h5pyViewer.ico'), wx.BITMAP_TYPE_ICO)
+    frame.SetIcon(icon)
     frame.Centre()
     wnd=app.GetTopWindow() 
     loc={'app'  :app,
@@ -146,10 +146,8 @@ class HdfViewerFrame(wx.Frame):
 
   def __init__(self, parent, title):
     wx.Frame.__init__(self, parent, title=title, size=wx.Size(650, 350))
-    path=__file__
-    try:path=os.readlink(path) #follow symbolic linc
-    except OSError as e:pass
-    icon = wx.Icon(os.path.join(os.path.dirname(path),'images','h5pyViewer.ico'), wx.BITMAP_TYPE_ICO)
+    imgDir=ut.Path.GetImage()
+    icon = wx.Icon(os.path.join(imgDir,'h5pyViewer.ico'), wx.BITMAP_TYPE_ICO)
     self.SetIcon(icon)
     wxSplt = wx.SplitterWindow(self, -1)
     wxTree = HdfTreeCtrl(wxSplt, 1, wx.DefaultPosition, (-1,-1),  wx.TR_HAS_BUTTONS)

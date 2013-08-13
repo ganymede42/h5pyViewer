@@ -69,6 +69,9 @@ class DlgColBarSetup(wx.Dialog):
 class HdfImageFrame(wx.Frame):
   def __init__(self, parent,lbl,hid):
     wx.Frame.__init__(self, parent, title=lbl, size=wx.Size(850, 650))
+    imgDir=ut.Path.GetImage()
+    icon = wx.Icon(os.path.join(imgDir,'h5pyViewer.ico'), wx.BITMAP_TYPE_ICO)
+    self.SetIcon(icon)
 
     t=type(hid)
     if t==h5py.h5d.DatasetID:

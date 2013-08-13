@@ -19,3 +19,21 @@ def test2(hid):
   plt.plot(ds[:,0])
   plt.show()
 
+def GetAttrVal(aid):
+  rtdt = h5py._hl.dataset.readtime_dtype(aid.dtype, []) 
+  arr = np.ndarray(aid.shape, dtype=rtdt, order='C')
+  aid.read(arr)
+  if len(arr.shape) == 0:
+    return arr[()]
+  return arr
+
+def test3(hid):
+    numAttr=h5py.h5a.get_num_attrs(hid)
+    for idxAttr in range(numAttr):
+      aid=h5py.h5a.open(hid,index=idxAttr)
+      val=GetAttrVal(aid)
+      print aid.name,val
+      if aid.name=='ofsTime':
+        plt.plot(val)
+        plt.show()
+

@@ -9,9 +9,9 @@
 implements a grid view classe to show 'excel-like'-tables of a hdf5 dataset.
 '''
 
-import wx,h5py
+import wx,h5py,os
 import wx.grid
-import numpy as N
+import numpy as np
 import utilities as ut
 
 #http://wxpython-users.1045709.n5.nabble.com/filling-a-wxgrid-td2348720.html
@@ -127,26 +127,26 @@ class Grid(wx.grid.Grid):
 class HdfGridFrame(wx.Frame):
   def __init__(self, parent,lbl,hid):
     wx.Frame.__init__(self, parent, title='HDFGridView: '+lbl,size=wx.Size(750, 650))
+    imgDir=ut.Path.GetImage()
+    icon = wx.Icon(os.path.join(imgDir,'h5pyViewer.ico'), wx.BITMAP_TYPE_ICO)
+    self.SetIcon(icon)
 
     pan = wx.Panel(self, -1)
 
     t=type(hid)
     if t==h5py.h5d.DatasetID:
       data=h5py.Dataset(hid)
-    #ut.StopWatch.Log('DBG 0.1')
-    #obj=N.random.rand(2,3000,4000)
-    #data=obj.value
-    #shape=obj.value.shape
-    #ut.StopWatch.Log('DBG 0.2')
-    #grid = Grid(pan, N.random.rand(3000,4000))
+    elif t==np.ndarray:
+      data=hid
+    else:
+      raise(TypeError('unhandled type'))
     grid = Grid(pan, data)
     
     tbl=grid.GetTable()
 
     sizer = wx.BoxSizer(wx.VERTICAL)
     sizer.Add(grid, 1, wx.EXPAND)
-
-    if type(hid.get_type())==h5py.h5t.TypeCompoundID:
+    if t!=np.ndarray and type(hid.get_type())==h5py.h5t.TypeCompoundID:
       tbl = TableCompound(data)
       tbl.view = tbl.data
     else:

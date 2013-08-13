@@ -8,7 +8,19 @@ if __name__ == '__main__':
   mpl.use('WXAgg') #or mpl.use('WX')
 
 from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as NavigationToolbar
-import time
+import time,os
+
+class Path():
+  @staticmethod
+  def GetImage():
+    path=__file__
+    try:symPath=os.readlink(path) #follow symbolic linc
+    except (AttributeError,OSError) as e:pass
+    else:
+      path=symPath
+    path=os.path.abspath(path)
+    path=os.path.dirname(path)
+    return os.path.join(path,'images')
 
 class StopWatch():
   @classmethod
