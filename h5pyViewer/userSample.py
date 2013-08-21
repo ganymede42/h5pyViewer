@@ -6,6 +6,13 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+def plot1d(hid):
+  print hid
+  ds=h5py.Dataset(hid)
+  ds
+  plt.plot(ds[0,:])
+  plt.show()
+
 def test1(hid):
   print hid
   ds=h5py.Dataset(hid)

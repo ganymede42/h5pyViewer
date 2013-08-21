@@ -1,4 +1,5 @@
-h5pyViewer Python Package:
+h5pyViewer Python Package
+=========================
 
 This package contains classes and tools to view \*.hdf5-Files
 
@@ -14,3 +15,7 @@ Locations:
  - https://pypi.python.org/pypi/h5pyViewer
  - https://github.com/ganymede42/h5pyViewer
 
+Screenshots
+-----------
+
+![scr1](/screenshot/scr1.png "h5pyViewer")

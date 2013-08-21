@@ -142,6 +142,9 @@ class HdfImageFrame(wx.Frame):
     mnItem=mn.Append(wx.ID_ANY, 'Setup Colormap', 'Setup the color mapping ');self.Bind(wx.EVT_MENU, self.OnColmapSetup, mnItem)
     mnItem=mn.Append(wx.ID_ANY, 'Linear Mapping', 'Use a linear values to color mapping ');self.Bind(wx.EVT_MENU, self.OnMapLin, mnItem)
     mnItem=mn.Append(wx.ID_ANY, 'Log Mapping', 'Use a logarithmic values to color mapping ');self.Bind(wx.EVT_MENU, self.OnMapLog, mnItem)
+    mnItem=mn.Append(wx.ID_ANY, 'Invert X-Axis', kind=wx.ITEM_CHECK);self.Bind(wx.EVT_MENU, self.OnInvertAxis, mnItem)
+    self.mnIDxAxis=mnItem.GetId()
+    mnItem=mn.Append(wx.ID_ANY, 'Invert Y-Axis', kind=wx.ITEM_CHECK);self.Bind(wx.EVT_MENU, self.OnInvertAxis, mnItem)
     mnBar.Append(mn, '&Edit')
     mn = wx.Menu()
     mnItem=mn.Append(wx.ID_ANY, 'Help', 'How to use the image viewer');self.Bind(wx.EVT_MENU, self.OnHelp, mnItem)
@@ -210,6 +213,16 @@ use cursor up and down to use a different colormap'''
     #print vmin, vmax
     self.img.set_norm(colBar.norm)
     colBar.patch.figure.canvas.draw()      
+
+  def OnInvertAxis(self,event):
+    ax=self.ax
+    #event.Checked()
+    if self.mnIDxAxis==event.GetId():
+      ax.invert_xaxis()
+    else:
+      ax.invert_yaxis()
+    self.canvas.draw() 
+    pass
    
   def OnMotion(self,event):
     #print event,event.x,event.y,event.inaxes,event.xdata,event.ydata
