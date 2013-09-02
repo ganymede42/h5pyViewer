@@ -90,14 +90,14 @@ def runSetup(**kv):
         'maintainer_email':'thierry.zamofing@psi.ch',
         'url'         :'www.psi.ch',
         'license'     :'(c) 2013 PSI',
-        'long_description':open('README.txt', 'r').read(),
+        'long_description':open('README.rst', 'r').read(),
         'platforms'   : ['Linux','Windows'],
         #'py_modules'  :['libDetXR', 'cbfParser'],
         'packages'    :['h5pyViewer'],
         #'package_dir' :{'h5pyViewer':'.'},
         'package_data':{'h5pyViewer': ['images/*.png','images/*.ico']},
         #'requires' requires: h5py==2.0.1 libDetXR==0.0.0.6 numpy==1.7.1 matplotlib==1.2.0 
-        'requires' : ['ctypes','h5py','numpy','matplotlib','libDetXR']
+        'requires' : ['ctypes','h5py','numpy','matplotlib']
       }
   if kv:
     args.update(kv)

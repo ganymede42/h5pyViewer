@@ -1,8 +1,4 @@
 #this file is used in collaboration with 'setup.py sdist'
 #these are additional files used in the source distribution
+include README.rst
 
-exclude ./tree.py
-exclude ./tmp.py
-#include utilities.py
-#recursive-include h5pyViewer/images *.png *.ico
-#prune ./tree.py
