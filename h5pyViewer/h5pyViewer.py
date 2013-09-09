@@ -15,7 +15,9 @@ from hdfTree import *
 from hdfGrid import *
 from hdfAttrib import *
 from hdfImage import  *
+from hdfImageGL import  *
 import utilities as ut
+
 
 class AboutFrame(wx.Frame):
   def __init__(self,parent):
@@ -40,6 +42,7 @@ class HdfTreePopupMenu(wx.Menu):
     self.AddMenu(self.OnShowAttrib,"Show Attributes")
     self.AddMenu(self.OnShowData,"Show Data")
     self.AddMenu(self.OnShowImage,"Show Image")
+    self.AddMenu(self.OnShowImageGL,"Show Image OpenGL")
     self.AddMenu(self.OnShell,"Python Shell")
     self.AddMenu(self.OnPrintProperties,"Print Properties")
     self.AddMenu(self.OnItem2,"Item Two")
@@ -58,7 +61,6 @@ class HdfTreePopupMenu(wx.Menu):
     frame=HdfAttribFrame(wxTree,lbl,hid)
     frame.Show(True)
     
-    
   def OnShowData(self, event):
     wxTree,wxNode=self.wxObjSrc
     lbl=wxTree.GetItemText(wxNode)
@@ -72,6 +74,13 @@ class HdfTreePopupMenu(wx.Menu):
     hid=wxTree.GetPyData(wxNode)
     frame=HdfImageFrame(wxTree,lbl,hid)
     frame.Show(True)  
+
+  def OnShowImageGL(self, event):
+    wxTree,wxNode=self.wxObjSrc
+    lbl=wxTree.GetItemText(wxNode)
+    hid=wxTree.GetPyData(wxNode)
+    frame=HdfImageGLFrame(wxTree,lbl,hid)
+    frame.Show(True)     
     
   def OnShell(self, event):
     wxTree,wxNode=self.wxObjSrc
@@ -121,9 +130,15 @@ import userSample as us;reload(us);us.test1(hid)
     print HdfViewerFrame.GetPropertyStr(wxTree,wxNode)
     
   def OnItem2(self, event):
-    print "Item Two selected obj %s"%self.lbl
+    print 'OnItem2'
+    GlumpyViewHdf5()
+    pass
+
   def OnItem3(self, event):
-    print "Item Three selected obj %s"%self.lbl
+    print 'OnItem3'
+    frame = GLFrame(None, -1, 'GL Window')
+    frame.Show()
+    pass
 
 class HdfViewerFrame(wx.Frame):
 
