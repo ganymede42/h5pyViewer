@@ -26,60 +26,27 @@ try:
 except ImportError as e:
   print 'ImportError: '+e.message
 
-class HdfImageGLFrame(wx.Frame):
+class GLCanvasImg(wx.glcanvas.GLCanvas):
   """A simple class for using OpenGL with wxPython."""
-  def __init__(self, parent, lbl, hid):
-        # Forcing a specific style on the window.
-        #   Should this include styles passed?
-    style = wx.DEFAULT_FRAME_STYLE | wx.NO_FULL_REPAINT_ON_RESIZE
-    super(HdfImageGLFrame, self).__init__(parent, title=lbl, size=wx.Size(850, 650), style=style)
-    imgDir=ut.Path.GetImage()
-    icon = wx.Icon(os.path.join(imgDir,'h5pyViewer.ico'), wx.BITMAP_TYPE_ICO)
-    self.SetIcon(icon)
-
+  def __init__(self,parent):
     self.GLinitialized = False
     attribList = (wx.glcanvas.WX_GL_RGBA,  # RGBA
                   wx.glcanvas.WX_GL_DOUBLEBUFFER,  # Double Buffered
                   wx.glcanvas.WX_GL_DEPTH_SIZE, 24)  # 24 bit
 
     # Create the canvas
-    self.canvas = wx.glcanvas.GLCanvas(self, attribList=attribList)
+    #self.canvas = wx.glcanvas.GLCanvas(parent, attribList=attribList)
+    wx.glcanvas.GLCanvas.__init__(self, parent, attribList=attribList)
 
     # Set the event handlers.
-    self.canvas.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
-    self.canvas.Bind(wx.EVT_SIZE, self.OnSize)
-    self.canvas.Bind(wx.EVT_PAINT, self.OnPaint)
-    self.canvas.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWeel)
-    self.canvas.Bind(wx.EVT_MOTION, self.OnMouseEvent)
-    self.canvas.Bind(wx.EVT_LEFT_DOWN, self.OnMouseEvent)
-    self.canvas.Bind(wx.EVT_LEFT_UP, self.OnMouseEvent)
-    #self.canvas.Bind(wx.EVT_IDLE, self.OnIdle)
-    t = type(hid)
-    if t == h5py.h5d.DatasetID:
-      data = h5py.Dataset(hid)
-      self.data=data
-    self.BuildMenu()
-
-  def BuildMenu(self):
-    mnBar = wx.MenuBar()
-
-    #-------- Edit Menu --------
-    mn = wx.Menu()
-    #mnItem=mn.Append(wx.ID_ANY, 'Setup Colormap', 'Setup the color mapping ');self.Bind(wx.EVT_MENU, self.OnColmapSetup, mnItem)
-    #mnItem=mn.Append(wx.ID_ANY, 'Linear Mapping', 'Use a linear values to color mapping ');self.Bind(wx.EVT_MENU, self.OnMapLin, mnItem)
-    #mnItem=mn.Append(wx.ID_ANY, 'Log Mapping', 'Use a logarithmic values to color mapping ');self.Bind(wx.EVT_MENU, self.OnMapLog, mnItem)
-    #mnItem=mn.Append(wx.ID_ANY, 'Invert X-Axis', kind=wx.ITEM_CHECK);self.Bind(wx.EVT_MENU, self.OnInvertAxis, mnItem)
-    #self.mnIDxAxis=mnItem.GetId()
-    #mnItem=mn.Append(wx.ID_ANY, 'Invert Y-Axis', kind=wx.ITEM_CHECK);self.Bind(wx.EVT_MENU, self.OnInvertAxis, mnItem)
-    mnBar.Append(mn, '&Edit')
-    mn = wx.Menu()
-    #mnItem=mn.Append(wx.ID_ANY, 'Help', 'How to use the image viewer');self.Bind(wx.EVT_MENU, self.OnHelp, mnItem)
-    mnBar.Append(mn, '&Help')
-
-    self.SetMenuBar(mnBar)
-    self.CreateStatusBar()      
-
-
+    self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
+    self.Bind(wx.EVT_SIZE, self.OnSize)
+    self.Bind(wx.EVT_PAINT, self.OnPaint)
+    self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWeel)
+    self.Bind(wx.EVT_MOTION, self.OnMouseEvent)
+    self.Bind(wx.EVT_LEFT_DOWN, self.OnMouseEvent)
+    self.Bind(wx.EVT_LEFT_UP, self.OnMouseEvent)
+    
   def OnMouseEvent(self, event):
     if event.ButtonDown(0):
       self.mouseStart=(np.array(event.GetPosition()),self.imgCoord.copy())
@@ -91,7 +58,7 @@ class HdfImageGLFrame(wx.Frame):
       try:
         (pStart,icStart)=self.mouseStart
       except AttributeError as e:
-        pSz = np.array(self.canvas.GetClientSize(),np.float32)
+        pSz = np.array(self.GetClientSize(),np.float32)
         pMouse  = np.array(event.GetPosition(),np.float32)
         ic=self.imgCoord
         pOfs=(ic[0::4]+[.5,.5])*pSz
@@ -99,21 +66,21 @@ class HdfImageGLFrame(wx.Frame):
         print tPos 
         if (tPos<0).any() or (tPos>1).any():
           return
-        data=self.data[0,...]
+        data=self.data
         tPos=tPos*(ic[3::4]-ic[1::4])+ic[1::4]
         tPos[0]*=data.shape[1]
         tPos[1]*=data.shape[0]
         v=tuple(tPos.astype(np.int32))
         v=tuple(reversed(v))
         v+=(data[v],)
+        self.SetStatus(self.Parent,v)
 
         #vS=event.GetPosition()[0]
-        self.SetStatusText( "Pos:(%d,%d) Value:%d"%v,0)
         pass
       else: 
         #prefix:
         #p Pixel, t Texture, v vertex
-        pSz = np.array(self.canvas.GetClientSize(),np.float32)
+        pSz = np.array(self.GetClientSize(),np.float32)
         pMouse  = np.array(event.GetPosition(),np.float32)
         ic=self.imgCoord
 
@@ -136,13 +103,13 @@ class HdfImageGLFrame(wx.Frame):
         ic[3::4]=icStart[3::4]-tOfs
             
         self.SetZoom()
-        self.canvas.Refresh(False)
+        self.Refresh(False)
     #event.Skip()
 
   def OnMouseWeel(self, event):
     #prefix:
     #p Pixel, t Texture, v vertex
-    pSz = np.array(self.canvas.GetClientSize(),np.float32)
+    pSz = np.array(self.GetClientSize(),np.float32)
     pMouse  = np.array(event.GetPosition(),np.float32)
     ic=self.imgCoord    
     n=event.GetWheelRotation()
@@ -162,24 +129,9 @@ class HdfImageGLFrame(wx.Frame):
     ic[3::4]=tMax
     #print tPos,pSz,pMouse,n,ic
     self.SetZoom()
-    self.canvas.Refresh(False)
+    self.Refresh(False)
 
     pass
-
-  def OnIdle(self, event):
-    try:
-      glumpyImg=self.glumpyImg
-      data=self.data
-      glumpyImgIdx=self.glumpyImgIdx
-    except AttributeError as e:
-      return
-    glumpyImgIdx+=1
-    print 'OnIdle',glumpyImgIdx
-    frm=data[glumpyImgIdx,...].astype(np.float32)
-    glumpyImg.data[:]=frm[:]
-    glumpyImg.update()
-    self.glumpyImgIdx=glumpyImgIdx
-    self.canvas.Refresh(False)
 
   def OnEraseBackground(self, event):
     """Process the erase background event."""
@@ -189,29 +141,29 @@ class HdfImageGLFrame(wx.Frame):
   def OnSize(self, event):
     """Process the resize event."""
     print 'OnSize'
-    if self.canvas.GetContext():
+    if self.GetContext():
             # Make sure the frame is shown before calling SetCurrent.
       self.Show()
-      self.canvas.SetCurrent()
+      self.SetCurrent()
 
-      size = self.canvas.GetClientSize()
+      size = self.GetClientSize()
       self.Reshape(size.width, size.height)
-      self.canvas.Refresh(False)
+      self.Refresh(False)
 
     event.Skip()
 
   def OnPaint(self, event):
     """Process the drawing event."""
     #print 'OnPaint'
-    self.canvas.SetCurrent()
+    self.SetCurrent()
 
     # This is a 'perfect' time to initialize OpenGL ... only if we need to
     if not self.GLinitialized:
       self.InitGL()
       self.GLinitialized = True
-      size = self.canvas.GetClientSize()
+      size = self.GetClientSize()
       self.Reshape(size.width, size.height)
-      self.canvas.Refresh(False)
+      self.Refresh(False)
 
     glClear(GL_COLOR_BUFFER_BIT)
     ic=self.imgCoord
@@ -224,7 +176,7 @@ class HdfImageGLFrame(wx.Frame):
     #glVertex(.25, -.25)
     #glVertex(0, .25)
     #glEnd()
-    self.canvas.SwapBuffers()    
+    self.SwapBuffers()    
     event.Skip()
 
   def SetZoom(self):
@@ -244,11 +196,10 @@ class HdfImageGLFrame(wx.Frame):
     print 'InitGL'
     glClearColor(1, 1, 1, 1)
     data=self.data
-    frm=data[0,...].astype(np.float32)
-    frm=5.*np.log(data[0,...].astype(np.float32)+1.)
+    frm=data[...].astype(np.float32)
+    frm=5.*np.log(data[...].astype(np.float32)+1.)
     self.glumpyImg = glumpy.image.Image(frm, colormap=glumpy.colormap.Hot,vmin=0, vmax=10)
     self.glumpyImg.update()
-    self.glumpyImgIdx=0
     self.imgCoord=np.array([-.49,0,.49,1,-.49,0,.49,1])#xmin,xmax,umin,umax,ymin,ymax,vmin,vmax    
     pass
 
@@ -263,6 +214,70 @@ class HdfImageGLFrame(wx.Frame):
 
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
+
+
+class HdfImageGLFrame(wx.Frame):
+  def __init__(self, parent, title, hid):
+        # Forcing a specific style on the window.
+        #   Should this include styles passed?
+    style = wx.DEFAULT_FRAME_STYLE | wx.NO_FULL_REPAINT_ON_RESIZE
+    wx.Frame.__init__(self, parent, title=title, size=wx.Size(850, 650), style=style)
+    imgDir=ut.Path.GetImage()
+    icon = wx.Icon(os.path.join(imgDir,'h5pyViewer.ico'), wx.BITMAP_TYPE_ICO)
+    self.SetIcon(icon)
+    self.canvas=GLCanvasImg(self)
+    self.canvas.SetStatus=self.SetStatus
+
+    #self.Bind(wx.EVT_IDLE, self.OnIdle)
+    t = type(hid)
+    if t == h5py.h5d.DatasetID:
+      ds = h5py.Dataset(hid)
+      self.dataSet=ds
+      frmIdx=0
+      self.canvas.data=ds[frmIdx,...]
+      self.frmIdx=frmIdx
+
+    self.BuildMenu()
+
+  def BuildMenu(self):
+    mnBar = wx.MenuBar()
+
+    #-------- Edit Menu --------
+    mn = wx.Menu()
+    #mnItem=mn.Append(wx.ID_ANY, 'Setup Colormap', 'Setup the color mapping ');self.Bind(wx.EVT_MENU, self.OnColmapSetup, mnItem)
+    #mnItem=mn.Append(wx.ID_ANY, 'Linear Mapping', 'Use a linear values to color mapping ');self.Bind(wx.EVT_MENU, self.OnMapLin, mnItem)
+    #mnItem=mn.Append(wx.ID_ANY, 'Log Mapping', 'Use a logarithmic values to color mapping ');self.Bind(wx.EVT_MENU, self.OnMapLog, mnItem)
+    #mnItem=mn.Append(wx.ID_ANY, 'Invert X-Axis', kind=wx.ITEM_CHECK);self.Bind(wx.EVT_MENU, self.OnInvertAxis, mnItem)
+    #self.mnIDxAxis=mnItem.GetId()
+    #mnItem=mn.Append(wx.ID_ANY, 'Invert Y-Axis', kind=wx.ITEM_CHECK);self.Bind(wx.EVT_MENU, self.OnInvertAxis, mnItem)
+    mnBar.Append(mn, '&Edit')
+    mn = wx.Menu()
+    #mnItem=mn.Append(wx.ID_ANY, 'Help', 'How to use the image viewer');self.Bind(wx.EVT_MENU, self.OnHelp, mnItem)
+    mnBar.Append(mn, '&Help')
+
+    self.SetMenuBar(mnBar)
+    self.CreateStatusBar()      
+
+  @staticmethod
+  def SetStatus(obj,v):
+    obj.SetStatusText( "Pos:(%d,%d) Value:%d"%v,0)
+
+
+  def OnIdle(self, event):
+    try:
+      glumpyImg=self.canvas.glumpyImg
+      ds=self.dataSet
+      frmIdx=self.frmIdx
+    except AttributeError as e:
+      return
+    frmIdx+=1
+    print 'OnIdle',frmIdx
+    frm=ds[frmIdx,...].astype(np.float32)
+    glumpyImg.data[:]=frm[:]
+    glumpyImg.update()
+    self.frmIdx=frmIdx
+    self.canvas.Refresh(False)
+
 
 if __name__ == '__main__':
   import os,sys,argparse #since python 2.7
