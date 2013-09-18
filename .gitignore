@@ -2,6 +2,7 @@
 *.pyc
 MANIFEST
 dist/
+build/
 .project
 .pydevproject
 

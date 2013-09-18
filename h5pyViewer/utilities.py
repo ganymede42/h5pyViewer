@@ -14,7 +14,7 @@ class Path():
   @staticmethod
   def GetImage():
     path=__file__
-    try:symPath=os.readlink(path) #follow symbolic linc
+    try:symPath=os.readlink(path) #follow symbolic link
     except (AttributeError,OSError) as e:pass
     else:
       path=symPath
