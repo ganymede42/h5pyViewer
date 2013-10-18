@@ -13,13 +13,10 @@ import wx
 #import os,h5py
 import numpy as np
 
-try:
-  import glumpy
-  from glumpy.graphics import VertexBuffer
-  import wx.glcanvas
-  from OpenGL.GL import *
-except ImportError as e:
-  print 'ImportError: '+e.message
+import glumpy
+from glumpy.graphics import VertexBuffer
+import wx.glcanvas
+from OpenGL.GL import *
 
 def MplAddColormap(m,lut):
   if type(lut)==dict:

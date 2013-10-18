@@ -15,7 +15,10 @@ from hdfTree import *
 from hdfGrid import *
 from hdfAttrib import *
 from hdfImage import  *
-from hdfImageGL import  *
+try:
+  from hdfImageGL import  *
+except ImportError as e:
+  print 'ImportError: '+e.message
 import utilities as ut
 
 
@@ -131,13 +134,10 @@ import userSample as us;reload(us);us.test1(hid)
     
   def OnItem2(self, event):
     print 'OnItem2'
-    GlumpyViewHdf5()
     pass
 
   def OnItem3(self, event):
     print 'OnItem3'
-    frame = GLFrame(None, -1, 'GL Window')
-    frame.Show()
     pass
 
 class HdfViewerFrame(wx.Frame):
@@ -333,7 +333,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=__doc__,
                                      epilog='Example:\n'+os.path.basename(sys.argv[0])+' '+exampleCmd+'\n ')
-    parser.add_argument('--hdfFile', default=fnHDF, help='the hdf5 to show')
+    parser.add_argument('hdfFile',   nargs='?', default=fnHDF, help='the hdf5 to show')
     
     args = parser.parse_args()
     return args
