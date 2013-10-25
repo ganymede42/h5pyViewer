@@ -49,7 +49,7 @@ class HdfImageGLFrame(wx.Frame):
       wxAxCtrl.idx=idx
       wxAxCtrlLst.append(wxAxCtrl)
       sizer.Add(wxAxCtrl.sizer, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, border=5)
-      wxAxCtrl.SetCallback(HdfImageGLFrame.OnSetView,wxAxCtrl)
+      wxAxCtrl.SetCallback(self.OnSetView,wxAxCtrl)
 
     sl=ut.GetSlice(idxXY,ds.shape,wxAxCtrlLst)
     
@@ -112,7 +112,7 @@ if __name__ == '__main__':
     #lbl='mcs'
     lbl='pilatus_1'
     #lbl='spec'
-    elem='/entry/dataScan00033/'+lbl
+    elem='/entry/data/'+lbl
     exampleCmd='--hdfFile='+fnHDF+' --elem='+elem
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=__doc__,

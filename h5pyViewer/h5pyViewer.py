@@ -19,6 +19,10 @@ try:
   from hdfImageGL import  *
 except ImportError as e:
   print 'ImportError: '+e.message
+try:
+  from FrmPyFAI import  *
+except ImportError as e:
+  print 'ImportError: '+e.message
 import utilities as ut
 
 
@@ -46,6 +50,8 @@ class HdfTreePopupMenu(wx.Menu):
     self.AddMenu(self.OnShowData,"Show Data")
     self.AddMenu(self.OnShowImage,"Show Image")
     self.AddMenu(self.OnShowImageGL,"Show Image OpenGL")
+    self.AddMenu(self.OnShowImgFAI1D,"Show Azimutal Integral Image 1D")
+    self.AddMenu(self.OnShowImgFAI2D,"Show Azimutal Integral Image 2D")
     self.AddMenu(self.OnShell,"Python Shell")
     self.AddMenu(self.OnPrintProperties,"Print Properties")
     self.AddMenu(self.OnItem2,"Item Two")
@@ -83,6 +89,20 @@ class HdfTreePopupMenu(wx.Menu):
     lbl=wxTree.GetItemText(wxNode)
     hid=wxTree.GetPyData(wxNode)
     frame=HdfImageGLFrame(wxTree,lbl,hid)
+    frame.Show(True)     
+
+  def OnShowImgFAI1D(self, event):
+    wxTree,wxNode=self.wxObjSrc
+    lbl=wxTree.GetItemText(wxNode)
+    hid=wxTree.GetPyData(wxNode)
+    frame=HdfPyFAI1DFrame(wxTree,lbl,hid)
+    frame.Show(True)     
+    
+  def OnShowImgFAI2D(self, event):
+    wxTree,wxNode=self.wxObjSrc
+    lbl=wxTree.GetItemText(wxNode)
+    hid=wxTree.GetPyData(wxNode)
+    frame=HdfPyFAIFrame(wxTree,lbl,hid)
     frame.Show(True)     
     
   def OnShell(self, event):

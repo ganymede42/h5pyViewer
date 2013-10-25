@@ -110,8 +110,8 @@ class GLCanvasImg(wx.glcanvas.GLCanvas):
         tPos[0]*=data.shape[1]
         tPos[1]*=data.shape[0]
         v=tuple(tPos.astype(np.int32))
-        v=tuple(reversed(v))
-        v+=(data[v],)
+        #v=tuple(reversed(v))
+        v+=(data[tuple(reversed(v))],)
         self.SetStatusCB(self.Parent,0,v)
 
         #vS=event.GetPosition()[0]
@@ -275,11 +275,27 @@ use mouse wheel to zoom in/out the image at a given point
       return dataRange
     elif txrTrfFunc==1:
       return (0,np.log(1+dataRange[1]-dataRange[0]))
+  
+  def AutoRange(self,txrTrfFunc):
+    data=self.data
+    self.txrTrfFunc=txrTrfFunc
+    if txrTrfFunc==0:
+      avg=np.average(data); std=np.std(data)
+      vmin=np.min(data);vmax=np.max(data)
+      vmin=max(vmin,avg-3*std);vmax=min(vmax,avg+3*std)      
+    elif txrTrfFunc==1:
+      vmin=np.min(data)
+      vmax=np.average(data)
+    self.dataRange=(vmin,vmax)
 
   def GetTxrData(self):
     data=self.data
-    txrTrfFunc=self.txrTrfFunc
-    #dataRange=self.dataRange
+    try:
+      txrTrfFunc=self.txrTrfFunc
+    except AttributeError as e:
+      self.AutoRange(1)     
+      txrTrfFunc=self.txrTrfFunc
+
     if txrTrfFunc==0:
       if data.dtype==np.float32:
         txrData=data
@@ -297,10 +313,7 @@ use mouse wheel to zoom in/out the image at a given point
     colMap=glumpy.colormap.Hot
     txrColBar=np.linspace(0.,1., 256).astype(np.float32)
     self.glColBar=glumpy.image.Image(txrColBar, colormap=colMap,vmin=0, vmax=1)
-    self.dataRange=(0,10) #data range that is mapped to the color bar colors
-    self.txrTrfFunc=0 #transfer function from data to texture values: linear mapping
-    self.txrTrfFunc=1 #transfer function from data to texture values: logarithmic mapping
-    
+   
     self.UpdateImg()
     self.imgCoord=np.array([-.49,0,.49,1,-.49,0,.49,1])#xmin,xmax,umin,umax,ymin,ymax,vmin,vmax    
     pass
