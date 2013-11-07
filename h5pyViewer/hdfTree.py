@@ -64,7 +64,21 @@ class HdfTreeCtrl(wx.TreeCtrl):
     wxNode = self.AddRoot(txt,image=0,data=wx.TreeItemData(hid))
     self._ShowHirarchy(wxNode,hid,0)
 
-    self.ExpandAll()
+    #self.ExpandAll()
+    self.ExpandLvl(wxNode,3)
+
+  def ExpandLvl(self,wxNode,lvl):
+    #print lvl,self.GetItemText(wxNode)
+    self.Expand(wxNode)
+    lvl=lvl-1
+    if lvl==0:
+      return
+    wxCld,cookie=self.GetFirstChild(wxNode)
+    while True:
+      if not wxCld.IsOk():
+        break
+      self.ExpandLvl(wxCld,lvl)
+      wxCld,cookie=self.GetNextChild(wxNode,cookie)
 
 if __name__ == '__main__':
   import utilities as ut

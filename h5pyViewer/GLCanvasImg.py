@@ -17,6 +17,7 @@ import glumpy
 from glumpy.graphics import VertexBuffer
 import wx.glcanvas
 from OpenGL.GL import *
+#from scipy import ndimage as ndi
 
 def MplAddColormap(m,lut):
   if type(lut)==dict:
@@ -281,11 +282,12 @@ use mouse wheel to zoom in/out the image at a given point
     self.txrTrfFunc=txrTrfFunc
     if txrTrfFunc==0:
       avg=np.average(data); std=np.std(data)
-      vmin=np.min(data);vmax=np.max(data)
+      vmin=data.min();vmax=data.max()
       vmin=max(vmin,avg-3*std);vmax=min(vmax,avg+3*std)      
     elif txrTrfFunc==1:
-      vmin=np.min(data)
-      vmax=np.average(data)
+      avg=np.average(data); std=np.std(data)     
+      vmin=data.min();vmax=data.max()
+      vmin=max(vmin,avg-3*std);vmax=min(vmax,avg+3*std)                 
     self.dataRange=(vmin,vmax)
 
   def GetTxrData(self):

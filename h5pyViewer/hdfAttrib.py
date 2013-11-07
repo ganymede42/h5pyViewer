@@ -39,6 +39,7 @@ class HdfAttrListCtrl(wx.ListCtrl):
     self.hid=hid
     self.DeleteAllItems()
     numAttr=h5py.h5a.get_num_attrs(hid)
+
     for idxAttr in range(numAttr):
       aid=h5py.h5a.open(hid,index=idxAttr)
       if aid.name.startswith('_u_'):
@@ -84,7 +85,7 @@ class HdfAttribFrame(wx.Frame):
     imgDir=ut.Path.GetImage()
     icon = wx.Icon(os.path.join(imgDir,'h5pyViewer.ico'), wx.BITMAP_TYPE_ICO)
     self.SetIcon(icon)
-    self.wxLstCtrl=HdfAttrListCtrl(self)
+    self.wxLstCtrl=HdfAttrListCtrl(self)  
     self.wxLstCtrl.ShowAttr(hid)  
     self.Centre()
  
@@ -92,11 +93,11 @@ if __name__ == '__main__':
   import utilities as ut
   import os,sys,argparse #since python 2.7
   def GetParser(required=True):   
-    fnHDF='/scratch/detectorData/e14472_00033.hdf5'
+    fnHDF='/scratch/detectorData/e14472/scan_00030-00033.hdf5'
     #lbl='mcs'
     #lbl='pilatus_1'
     lbl='spec'
-    elem='/entry/dataScan00033/'+lbl
+    elem='/entry/data/'+lbl
     exampleCmd='--hdfFile='+fnHDF+' --elem='+elem
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=__doc__,

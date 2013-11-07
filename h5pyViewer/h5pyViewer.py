@@ -67,6 +67,8 @@ class HdfTreePopupMenu(wx.Menu):
     wxTree,wxNode=self.wxObjSrc
     lbl=wxTree.GetItemText(wxNode)
     hid=wxTree.GetPyData(wxNode)
+    if type(hid)==h5py.h5f.FileID:
+      hid=h5py.h5o.open(hid,'/')     
     frame=HdfAttribFrame(wxTree,lbl,hid)
     frame.Show(True)
     
@@ -278,8 +280,12 @@ class HdfViewerFrame(wx.Frame):
     #print o.Data,wxTree.GetPyData(wxNode)
     #if type(gid)==h5py.h5g.GroupID:
     txt=path+'\n'
-    objInf=h5py.h5o.get_info(hid)
     t=type(hid)
+    if t==h5py.h5f.FileID:
+      txt+=type(hid).__name__+':%d\n'%hid.id     
+      hid=h5py.h5o.open(hid,'/')
+      t=type(hid)
+    objInf=h5py.h5o.get_info(hid)
     #print t,hid.id,objInf.fileno, objInf.rc, objInf.type, objInf.addr, objInf.hdr       
     txt+=type(hid).__name__+':%d\n'%hid.id     
     txt+='addr:%d fileno:%d refCnt:%d\n'%(objInf.addr,objInf.fileno, objInf.rc)      
