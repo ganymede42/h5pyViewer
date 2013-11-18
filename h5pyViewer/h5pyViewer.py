@@ -23,6 +23,11 @@ try:
   from FrmPyFAI import  *
 except ImportError as e:
   print 'ImportError: '+e.message
+try:
+  from FrmProcRoiStat import ProcRoiStatFrame
+except ImportError as e:
+  print 'ImportError: '+e.message
+  
 import utilities as ut
 
 
@@ -52,6 +57,7 @@ class HdfTreePopupMenu(wx.Menu):
     self.AddMenu(self.OnShowImageGL,"Show Image OpenGL")
     self.AddMenu(self.OnShowImgFAI1D,"Show Azimutal Integral Image 1D")
     self.AddMenu(self.OnShowImgFAI2D,"Show Azimutal Integral Image 2D")
+    self.AddMenu(self.OnShowRoiStat,"Show Roi Statistics")   
     self.AddMenu(self.OnShell,"Python Shell")
     self.AddMenu(self.OnPrintProperties,"Print Properties")
     self.AddMenu(self.OnItem2,"Item Two")
@@ -105,6 +111,14 @@ class HdfTreePopupMenu(wx.Menu):
     lbl=wxTree.GetItemText(wxNode)
     hid=wxTree.GetPyData(wxNode)
     frame=HdfPyFAIFrame(wxTree,lbl,hid)
+    frame.Show(True)     
+
+  def OnShowRoiStat(self, event):
+    wxTree,wxNode=self.wxObjSrc
+    lbl=wxTree.GetItemText(wxNode)
+    hid=wxTree.GetPyData(wxNode)
+    fnMatRoi='/scratch/detectorData/cSAXS_2013_10_e14608_georgiadis_3D_for_Marianne/analysis/data/pilatus_integration_mask.mat'    
+    frame=ProcRoiStatFrame(wxTree,lbl,hid,fnMatRoi)
     frame.Show(True)     
     
   def OnShell(self, event):
