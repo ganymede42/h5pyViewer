@@ -25,9 +25,44 @@ import numpy as np
 import utilities as ut
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 import pylab as plt #used for the colormaps
+from libDetXR.procMoment import ProcMoment
+#from scipy import ndimage as ndi
+
+
 #or from matplotlib.backends.backend_wx import FigureCanvasWx as FigureCanvas
 #The source of the DraggableColorbar is from:
 #http://www.ster.kuleuven.be/~pieterd/python/html/plotting/interactive_colorbar.html
+
+#class ShiftedLogNorm(mpl.colors.Normalize):
+class ShiftedLogNorm(mpl.colors.LogNorm):
+  #copied and modified from LogNorm
+    def __call__(self, value, clip=None):
+      #print value.shape,self.vmin,self.vmax,self.clip,clip
+      if clip is None:
+          clip = self.clip 
+      ofs0=1-self.vmin
+      ofs1=1./(np.log(self.vmax+1-self.vmin))
+      result=np.log(value+ofs0)*ofs1
+      result = np.ma.masked_less_equal(result, 0, copy=False)
+      return result
+    def inverse(self, value):
+        if not self.scaled():
+            raise ValueError("Not invertible until scaled")
+        vmin, vmax = self.vmin, self.vmax
+        ofs0=1-vmin
+        if mpl.cbook.iterable(value):
+          val = np.ma.asarray(value)
+          return vmin * np.ma.power((vmax/vmin), val)-ofs0
+        else:
+          return vmin * pow((vmax/vmin), value)-ofs0
+    def autoscale_None(self, A):
+      if self.vmin is None:
+          self.vmin = np.ma.min(A)
+      if self.vmax is None:
+          self.vmax = np.ma.max(A)
+      pass
+    def autoscale(self, A):
+      pass
 
 class MPLCanvasImg(FigureCanvas):
   def __init__(self,parent,SetStatusCB=None):
@@ -50,8 +85,19 @@ class MPLCanvasImg(FigureCanvas):
     avg=np.average(data); std=np.std(data)
     vmin=np.min(data);vmax=np.max(data)
     vmin=max(vmin,avg-3*std);vmax=min(vmax,avg+3*std)
+    
+    vmin=1
+    norm=ShiftedLogNorm()
+    #img = ax.imshow(data,interpolation='nearest',cmap=mpl.cm.jet, norm=ShiftedLogNorm(vmin=vmin, vmax=vmax))
+
     img = ax.imshow(data,interpolation='nearest',cmap=mpl.cm.jet, vmin=vmin, vmax=vmax)
-    colBar=fig.colorbar(img,orientation='vertical')
+    colBar=fig.colorbar(img,orientation='vertical',norm=norm)
+    colBar.norm=ShiftedLogNorm(vmin=vmin, vmax=vmax)
+    img.set_norm(colBar.norm)
+    img.cmap._init();bg=img.cmap._lut[0].copy();bg[:-1]/=4
+    ax.set_axis_bgcolor(bg)    
+    
+
     self.colBar=colBar
     self.colCycle = sorted([i for i in dir(plt.cm) if hasattr(getattr(plt.cm,i),'N')])
     self.colIndex = self.colCycle.index(colBar.get_cmap().name)
@@ -166,7 +212,7 @@ class MPLCanvasImg(FigureCanvas):
       if k[0]!='_':
         print k,getattr(event,k)
 
-class DlgColBarSetup(wx.Dialog):
+class DlgColBarSetupOld(wx.Dialog):
   def __init__(self,parent):
     wx.Dialog.__init__(self,parent,-1,'Colormap Setup')
     colBar=parent.canvas.colBar
@@ -204,6 +250,105 @@ class DlgColBarSetup(wx.Dialog):
     canvas.img.set_norm(colBar.norm)
     #colBar.patch.figure.canvas.draw()
     canvas.draw()      
+
+
+class DlgColBarSetup(wx.Dialog):
+  def __init__(self,parent):
+    wx.Dialog.__init__(self,parent,-1,'Colormap Setup')
+    colBar=parent.canvas.colBar
+    cmap=colBar.cmap
+    nrm=colBar.norm    
+       
+    txtVMin=wx.StaticText(self,-1,'vmin')
+    txtVMax=wx.StaticText(self,-1,'vmax')
+    txtColMap=wx.StaticText(self,-1,'colormap')   
+    self.edVMin=edVMin=wx.TextCtrl(self,-1,'%g'%nrm.vmin,style=wx.TE_PROCESS_ENTER)
+    self.edVMax=edVMax=wx.TextCtrl(self,-1,'%g'%nrm.vmax,style=wx.TE_PROCESS_ENTER)
+
+    txtTxrFunc=wx.StaticText(self,-1,'function')   
+    self.cbtxrFunc=cbtxrFunc=wx.ComboBox(self, -1, choices=('linear','logarithmic'), style=wx.CB_READONLY)    
+    cbtxrFunc.SetSelection(0 if nrm.__class__==mpl.colors.Normalize else 1)
+    
+    #colMapLst=('Accent', 'Blues', 'BrBG', 'BuGn', 'BuPu', 'Dark2', 'GnBu', 'Greens', 'Greys', 'OrRd', 'Oranges', 'PRGn', 'Paired',
+    #'Pastel1', 'Pastel2', 'PiYG', 'PuBu', 'PuBuGn', 'PuOr', 'PuRd', 'Purples', 'RdBu', 'RdGy', 'RdPu', 'RdYlBu', 'RdYlGn', 'Reds',
+    #'Set1', 'Set2', 'Set3', 'Spectral', 'YlGn', 'YlGnBu', 'YlOrBr', 'YlOrRd', 'afmhot', 'autumn', 'binary', 'bone', 'brg', 'bwr',
+    #'cool', 'coolwarm', 'copper', 'cubehelix', 'flag', 'gist_earth', 'gist_gray', 'gist_heat', 'gist_ncar', 'gist_rainbow', 'gist_stern',
+    #'gist_yarg', 'gnuplot', 'gnuplot2', 'gray', 'hot', 'hsv', 'jet', 'ocean', 'pink', 'prism', 'rainbow', 'seismic', 'spectral',
+    #'spring', 'summer', 'terrain', 'winter')
+    
+    colMapLst=('hot','spectral','jet','gray','RdYlBu','hsv','gist_stern','gist_ncar','BrBG','RdYlBu','brg','gnuplot2',
+               'prism','rainbow',)    
+    
+    self.cbColMap=cbColMap=wx.ComboBox(self, -1, choices=colMapLst, style=wx.CB_READONLY)
+    cbColMap.Value=cmap.name
+    
+    sizer=wx.BoxSizer(wx.VERTICAL)
+    fgs=wx.FlexGridSizer(4,2,5,5)
+    fgs.Add(txtVMin,0,wx.ALIGN_RIGHT)
+    fgs.Add(edVMin,0,wx.EXPAND)
+    fgs.Add(txtVMax,0,wx.ALIGN_RIGHT)
+    fgs.Add(edVMax,0,wx.EXPAND)
+    fgs.Add(txtTxrFunc,0,wx.ALIGN_RIGHT)
+    fgs.Add(cbtxrFunc,0,wx.EXPAND)
+    fgs.Add(txtColMap,0,wx.ALIGN_RIGHT)
+    fgs.Add(cbColMap,0,wx.EXPAND)
+    sizer.Add(fgs,0,wx.EXPAND|wx.ALL,5)
+
+    edVMin.SetFocus()
+
+    btns =  self.CreateButtonSizer(wx.OK|wx.CANCEL)
+    btnApply=wx.Button(self, -1, 'Apply')
+    btns.Add(btnApply, 0, wx.ALL, 5)
+    sizer.Add(btns,0,wx.EXPAND|wx.ALL,5)
+    self.Bind(wx.EVT_BUTTON, self.OnModify, id=wx.ID_OK)
+    self.Bind(wx.EVT_BUTTON, self.OnModify, btnApply)
+    #self.Bind(wx.EVT_TEXT_ENTER, self.OnModify, edVMin)
+    #self.Bind(wx.EVT_TEXT_ENTER, self.OnModify, edVMax)
+    self.Bind(wx.EVT_TEXT, self.OnModify, edVMin)
+    self.Bind(wx.EVT_TEXT, self.OnModify, edVMax)
+    self.Bind(wx.EVT_COMBOBOX, self.OnModify, cbtxrFunc)
+    self.Bind(wx.EVT_COMBOBOX, self.OnModify, cbColMap)
+
+    self.SetSizer(sizer)
+    sizer.Fit(self)
+
+  def OnModify(self, event):
+    #print 'OnModify'
+    parent=self.GetParent()
+    canvas=parent.canvas
+    colBar=canvas.colBar
+    cmap=colBar.cmap
+    nrm=colBar.norm    
+    img=canvas.img
+    ax=img.get_axes()
+    data=img.get_array()
+
+    v=self.cbColMap.Value
+    if v!=cmap.name:
+      cmap=getattr(mpl.cm,v)
+      colBar.set_cmap(cmap)
+      colBar.draw_all()
+      img.set_cmap(cmap)
+      ax.set_title(cmap.name)
+      colBar.patch.figure.canvas.draw()
+
+    vmin,vmax=(float(self.edVMin.Value),float(self.edVMax.Value))
+    nrm.vmin=vmin; nrm.vmax=vmax
+    v=self.cbtxrFunc.GetCurrentSelection()
+    func=(mpl.colors.Normalize,ShiftedLogNorm)
+    if nrm.__class__!=func[v]:
+      if v==0: #linear mapping
+        colBar.norm = mpl.colors.Normalize(vmin, vmax)
+      elif v==1: #log mapping
+        img.cmap._init();bg=img.cmap._lut[0].copy();bg[:-1]/=4
+        ax.set_axis_bgcolor(bg)
+        vmin=1
+        colBar.norm = mpl.colors.LogNorm(vmin,vmax)
+    img.set_norm(colBar.norm)
+    colBar.patch.figure.canvas.draw()            
+    parent.Refresh(False)
+    if event.GetId()==wx.ID_OK:
+      event.Skip()#do not consume (use event to close the window and sent return code)  
   
 class HdfImageFrame(wx.Frame):
   def __init__(self, parent,lbl,hid):
@@ -257,11 +402,11 @@ class HdfImageFrame(wx.Frame):
     #-------- Edit Menu --------
     mn = wx.Menu()
     mnItem=mn.Append(wx.ID_ANY, 'Setup Colormap', 'Setup the color mapping ');self.Bind(wx.EVT_MENU, self.OnColmapSetup, mnItem)
-    mnItem=mn.Append(wx.ID_ANY, 'Linear Mapping', 'Use a linear values to color mapping ');self.Bind(wx.EVT_MENU, self.OnMapLin, mnItem)
-    mnItem=mn.Append(wx.ID_ANY, 'Log Mapping', 'Use a logarithmic values to color mapping ');self.Bind(wx.EVT_MENU, self.OnMapLog, mnItem)
     mnItem=mn.Append(wx.ID_ANY, 'Invert X-Axis', kind=wx.ITEM_CHECK);self.Bind(wx.EVT_MENU, self.OnInvertAxis, mnItem)
     self.mnIDxAxis=mnItem.GetId()
     mnItem=mn.Append(wx.ID_ANY, 'Invert Y-Axis', kind=wx.ITEM_CHECK);self.Bind(wx.EVT_MENU, self.OnInvertAxis, mnItem)
+    mnItem=mn.Append(wx.ID_ANY, 'Show Moments', 'Show image moments ', kind=wx.ITEM_CHECK);self.Bind(wx.EVT_MENU, self.OnShowMoments, mnItem)
+    self.mnItemShowMoment=mnItem
     mnBar.Append(mn, '&Edit')
     mn = wx.Menu()
     mnItem=mn.Append(wx.ID_ANY, 'Help', 'How to use the image viewer');self.Bind(wx.EVT_MENU, self.OnHelp, mnItem)
@@ -288,10 +433,72 @@ class HdfImageFrame(wx.Frame):
     imgFrm=usrData.slider.Parent
     #imgFrm.img.set_array(imgFrm.data[usrData.value,...])
     data=imgFrm.data
-    sl=ut.GetSlice(imgFrm.idxXY,data.shape,imgFrm.wxAxCtrlLst)
+    sl=ut.GetSlice(imgFrm.idxXY,data.shape,imgFrm.wxAxCtrlLst)   
+
     imgFrm.canvas.img.set_array(data[sl])
+    if imgFrm.mnItemShowMoment.IsChecked():
+      imgFrm.PlotMoments()       
     imgFrm.canvas.draw()
     pass
+
+  def OnShowMoments(self,event):
+    if event.IsChecked():
+      base='/scratch/detectorData/cSAXS_2013_10_e14608_georgiadis_3D_for_Marianne'
+      self.procMoment=pm=ProcMoment()
+      pm.SetMskMat(os.path.join(base,'analysis/data/pilatus_valid_mask.mat'),False)   
+      #pm.SetProcess('python')
+      pm.SetProcess('pyFast')
+      self.PlotMoments()
+      #self.canvas.img.draw()
+      data=self.canvas.img.get_array()
+      self.canvas.img.set_array(data)
+      fig, ax = plt.subplots(2)
+      v=data.sum(axis=0); x=np.arange(v.size); x0=x.sum(); m0=v.sum(); m1=(v*x).sum(); m2=(v*x*x).sum()
+      ax[0].plot(v);
+      m=m1/m0
+      s=np.sqrt( (m2-(m1**2/m0))/m0)     
+      xx=1/(s*np.sqrt(2*np.pi))*np.exp(-.5*((x-m)/s)**2)
+      ax[0].set_title('%g | %g | %g | %g | %g'%(m0,m1,m2,m,s))
+      ax[0].hold(True);ax[0].plot(xx*m0)      
+      
+      v=data.sum(axis=1);
+      ax[1].plot(v);
+      
+    
+      plt.show()
+      print pm.resArr[0:3],pm.resArr[1]/pm.resArr[0],pm.resArr[2]/pm.resArr[0]      
+    else:
+      for o in self.goMoment:
+        o.remove()
+      del self.goMoment
+      del self.procMoment
+    self.canvas.draw()             
+      
+  def PlotMoments(self):
+    data=self.canvas.img.get_array()
+    pm=self.procMoment
+
+    #data=ndi.median_filter(data, 3)
+    data[pm.mask==False]=0
+    #data[100:110,500:510]=1000 #y,x
+    #data[650:850,700:850]=0 #y,x
+    #pm.Process(np.log(data+1))
+    pm.Process(data)
+    xbar, ybar, cov=pm.GetIntertialAxis()
+    print xbar, ybar, cov
+    #fig, ax = plt.subplots()
+    #ax.imshow(data,vmax=100,interpolation='nearest')
+    #plt.show()
+    ax=self.canvas.img.get_axes()
+    try:
+      for o in self.goMoment:
+        o.remove()
+    except AttributeError: pass
+
+    self.goMoment=ProcMoment.PlotMoments(ax, xbar, ybar, cov)
+    ax.axis('image')
+    
+    
 
   def OnHelp(self,event):
     msg='''to change the image selection:
@@ -313,33 +520,6 @@ use cursor up and down to use a different colormap'''
     if dlg.ShowModal()==wx.ID_OK:
       pass
     dlg.Destroy()
-
-  def OnMapLin(self,event):
-    img=self.canvas.img
-    data=img.get_array()
-    colBar=self.canvas.colBar
-    avg=np.average(data); std=np.std(data)
-    vmin=np.min(data);vmax=np.max(data)
-    vmin=max(vmin,avg-3*std);vmax=min(vmax,avg+3*std)
-    #print vmin, vmax
-    colBar.norm = mpl.colors.Normalize(vmin, vmax)
-    img.set_norm(colBar.norm)
-    colBar.patch.figure.canvas.draw()      
-
-  def OnMapLog(self,event):
-    #print self.colBar.norm,self.img.norm
-    img=self.canvas.img
-    ax=self.canvas.ax
-    colBar=self.canvas.colBar
-    data=img.get_array()
-    img.cmap._init();bg=img.cmap._lut[0].copy();bg[:-1]/=4
-    ax.set_axis_bgcolor(bg)
-    avg=np.average(data); std=np.std(data)
-    vmin=1;vmax=avg+3*std
-    colBar.norm = mpl.colors.LogNorm(vmin,vmax)
-    #print vmin, vmax
-    img.set_norm(colBar.norm)
-    colBar.patch.figure.canvas.draw()      
 
   def OnInvertAxis(self,event):
     ax=self.canvas.ax

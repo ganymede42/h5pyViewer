@@ -45,9 +45,11 @@ class ProcRoiStatFrame(HdfImageGLFrame):
     prs.SetRoiMat(fnMatRoi,raw.shape)
     prs.SetProcess('avg')
     print 'numnber of ROI,',prs.roiLenArr.size,'Total number of pixels',prs.roiIdxArr.size
-    prs.Process_C(raw)
+    prs.Process(raw)
     print prs.resArr[0,:].max(),prs.resArr[0,:].min()
-    canvas.data=np.rot90(prs.resArr[0,:].reshape(-1,prs.mskNumSeg))
+    canvas.data=prs.resArr
+    #.reshape(prs.mskNumSeg,-1)
+    #canvas.data=np.rot90(prs.resArr[0,:].reshape(-1,prs.mskNumSeg))
 
   def BuildMenu(self):
     HdfImageGLFrame.BuildMenu(self)
@@ -68,8 +70,9 @@ class ProcRoiStatFrame(HdfImageGLFrame):
     sl=ut.GetSlice(frm.idxXY,ds.shape,frm.wxAxCtrlLst)
     
     prs=frm.prs
-    prs.Process_C(ds[sl])
-    canvas.data[:]=(np.rot90(prs.resArr[0,:].reshape(-1,prs.mskNumSeg)))[:]
+    prs.Process(ds[sl])
+    #canvas.data[:]=(np.rot90(prs.resArr[0,:].reshape(-1,prs.mskNumSeg)))[:]
+    canvas.data[:]=prs.resArr[:]
     glImg.data[:]=canvas.GetTxrData()
     glImg.update()
     canvas.OnPaint(None)#force to repaint, Refresh and Update do not force !

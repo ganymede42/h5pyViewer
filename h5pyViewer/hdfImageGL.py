@@ -87,7 +87,7 @@ class HdfImageGLFrame(wx.Frame):
   @staticmethod
   def SetStatusCB(obj,mode,v):
     if mode==0:
-      obj.SetStatusText( "Pos:(%d,%d) Value:%d"%v,0)
+      obj.SetStatusText( "Pos:(%d,%d) Value:%g"%v,0)
 
   @staticmethod
   def OnSetView(usrData,value,msg):
@@ -104,7 +104,7 @@ class HdfImageGLFrame(wx.Frame):
     #canvas.Refresh(False)
     #canvas.Update()
     pass
-
+    
 if __name__ == '__main__':
   import os,sys,argparse #since python 2.7
   def GetParser(required=True):
