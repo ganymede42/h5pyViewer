@@ -295,6 +295,14 @@ class HdfViewerFrame(wx.Frame):
     #if type(gid)==h5py.h5g.GroupID:
     txt=path+'\n'
     t=type(hid)
+    if t==tuple:
+      if hid[0]==None:
+        txt+='missing external link:\n  '+hid[1]+'\n  '+hid[2]
+        return txt
+      else:
+        txt+='external link:\n  '+hid[1]+'\n  '+hid[2]
+        hid=hid[0]
+        t=type(hid)
     if t==h5py.h5f.FileID:
       txt+=type(hid).__name__+':%d\n'%hid.id     
       hid=h5py.h5o.open(hid,'/')

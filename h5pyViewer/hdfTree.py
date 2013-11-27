@@ -17,7 +17,7 @@ class HdfTreeCtrl(wx.TreeCtrl):
     wx.TreeCtrl.__init__(self, parent, *args, **kwargs)
     il = wx.ImageList(16, 16)
     rootDir=os.path.join(os.path.dirname(__file__),'images')
-    for img in ('home','folder','dataset','compound','text'):
+    for img in ('home','folder','dataset','compound','text','warning','link'):
       il.Add(wx.Image(rootDir+'/%s.png'%img, wx.BITMAP_TYPE_PNG).ConvertToBitmap())
     self.AssignImageList(il)
 
@@ -27,26 +27,33 @@ class HdfTreeCtrl(wx.TreeCtrl):
     #  hidStr=get_objname_by_idx(idx)
     #  get_objtype_by_idx(INT idx)
     for hidStr in h5py.h5g.GroupIter(gid):
-      hid = h5py.h5o.open(gid,hidStr)
-      #try:
-      #  gid.get_linkval(hidStr)
-      #except BaseException as e:
-      #  pass
-      #else:
-      #  print hidStr,'is a sym link'
-      t=type(hid)
-      if t==h5py.h5g.GroupID:
-        image=1
-      elif t==h5py.h5d.DatasetID:
-        tt=type(hid.get_type())
-        if tt==h5py.h5t.TypeCompoundID:
-          image=3
-        elif tt==h5py.h5t.TypeStringID:
-          image=4
+      lid=gid.links.get_info(hidStr)
+      try:
+        hid = h5py.h5o.open(gid,hidStr)
+      except KeyError as e:
+        hid=None
+        t=None
+      if lid.type==h5py.h5l.TYPE_EXTERNAL:
+        if hid==None:
+          image=5
         else:
-          image=2
+          image=6
+        hid=(hid,)+gid.links.get_val(hidStr)
+        t=type(hid)
       else:
-        image=-1
+        t=type(hid)
+        if t==h5py.h5g.GroupID:
+          image=1
+        elif t==h5py.h5d.DatasetID:
+          tt=type(hid.get_type())
+          if tt==h5py.h5t.TypeCompoundID:
+            image=3
+          elif tt==h5py.h5t.TypeStringID:
+            image=4
+          else:
+            image=2
+        else:
+          image=-1
       wxNode = self.AppendItem(wxParent, hidStr,image=image,data=wx.TreeItemData(hid))
       if t==h5py.h5g.GroupID:
         self._ShowHirarchy(wxNode,hid,lvl+1)

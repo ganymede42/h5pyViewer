@@ -25,7 +25,12 @@ import numpy as np
 import utilities as ut
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 import pylab as plt #used for the colormaps
-from libDetXR.procMoment import ProcMoment
+try:
+  from libDetXR.procMoment import ProcMoment
+except ImportError as e:
+  print 'ImportError: '+e.message
+
+
 #from scipy import ndimage as ndi
 
 
@@ -466,7 +471,7 @@ class HdfImageFrame(wx.Frame):
       
     
       plt.show()
-      print pm.resArr[0:3],pm.resArr[1]/pm.resArr[0],pm.resArr[2]/pm.resArr[0]      
+      #print pm.resArr[0:3],pm.resArr[1]/pm.resArr[0],pm.resArr[2]/pm.resArr[0]      
     else:
       for o in self.goMoment:
         o.remove()
@@ -480,12 +485,30 @@ class HdfImageFrame(wx.Frame):
 
     #data=ndi.median_filter(data, 3)
     data[pm.mask==False]=0
+    #data=np.log(data+1)
     #data[100:110,500:510]=1000 #y,x
     #data[650:850,700:850]=0 #y,x
     #pm.Process(np.log(data+1))
     pm.Process(data)
     xbar, ybar, cov=pm.GetIntertialAxis()
-    print xbar, ybar, cov
+
+    m=pm.resArr
+    m00=m[0];m01=m[1];m10=m[2];m11=m[3];m02=m[4];m20=m[5]
+    
+    xm = m10 / m00
+    ym = m01 / m00
+    u11 = (m11 - xm * m01) / m00
+    #u11[u11<0.]=0. #processing rounding error
+    u20 = (m20 - xm * m10) / m00
+    u02 = (m02 - ym * m01) / m00
+    a=(u20+u02)/2
+    b=np.sqrt(4*u11**2+(u20-u02)**2)/2
+    l0=a+b
+    l1=a-b
+    ang=0.5*np.arctan2(2*u11,(u20-u02))/(2*np.pi)*360. #orientation value 0..1
+    exc=np.sqrt(1-l1/l0) #eccentricity :circle=0: http://en.wikipedia.org/wiki/Eccentricity_%28mathematics%29
+
+    print 'xb:%g yb:%g cov:%g %g %g %g  ang:%g exc:%g'%((xm, ym)+tuple(cov.ravel())+(ang,exc))
     #fig, ax = plt.subplots()
     #ax.imshow(data,vmax=100,interpolation='nearest')
     #plt.show()
@@ -497,8 +520,6 @@ class HdfImageFrame(wx.Frame):
 
     self.goMoment=ProcMoment.PlotMoments(ax, xbar, ybar, cov)
     ax.axis('image')
-    
-    
 
   def OnHelp(self,event):
     msg='''to change the image selection:
