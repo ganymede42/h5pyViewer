@@ -90,7 +90,8 @@ class MPLCanvasImg(FigureCanvas):
     avg=np.average(data); std=np.std(data)
     vmin=np.min(data);vmax=np.max(data)
     vmin=max(vmin,avg-3*std);vmax=min(vmax,avg+3*std)
-    
+    if vmax==vmin:
+      vmax+=1
     vmin=1
     norm=ShiftedLogNorm()
     #img = ax.imshow(data,interpolation='nearest',cmap=mpl.cm.jet, norm=ShiftedLogNorm(vmin=vmin, vmax=vmax))
@@ -448,9 +449,17 @@ class HdfImageFrame(wx.Frame):
 
   def OnShowMoments(self,event):
     if event.IsChecked():
-      base='/scratch/detectorData/cSAXS_2013_10_e14608_georgiadis_3D_for_Marianne'
+      dlg = wx.FileDialog(self, "Choose valid mask file (e.g. pilatus_valid_mask.mat)", os.getcwd(), '','MATLAB files (*.mat)|*.mat|all (*.*)|*.*', wx.OPEN|wx.FD_CHANGE_DIR)
+      if dlg.ShowModal() == wx.ID_OK:
+        fnMatMsk = dlg.GetPath()
+        print 'OnOpen',fnMatMsk
+      dlg.Destroy()       
+      if not fnMatMsk:
+        return      
+      #fnMatMsk='/scratch/detectorData/cSAXS_2013_10_e14608_georgiadis_3D_for_Marianne/analysis/data/pilatus_valid_mask.mat'
       self.procMoment=pm=ProcMoment()
-      pm.SetMskMat(os.path.join(base,'analysis/data/pilatus_valid_mask.mat'),False)   
+      pm.SetMskMat(fnMatMsk,False)   
+
       #pm.SetProcess('python')
       pm.SetProcess('pyFast')
       self.PlotMoments()

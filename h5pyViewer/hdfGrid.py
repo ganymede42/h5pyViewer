@@ -65,7 +65,9 @@ class Table2DArray(wx.grid.PyGridTableBase):
 
   def GetValue(self, row, col):
     #ut.StopWatch.Log('GetValue %d %d'%(row,col))
-    return self.view[row,col]
+    return self.view[row][col]
+    # for hex format return '0x%x'%self.view[row][col]
+
 
 class TableCompound(wx.grid.PyGridTableBase):
   def __init__(self, data):

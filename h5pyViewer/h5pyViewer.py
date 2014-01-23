@@ -117,7 +117,15 @@ class HdfTreePopupMenu(wx.Menu):
     wxTree,wxNode=self.wxObjSrc
     lbl=wxTree.GetItemText(wxNode)
     hid=wxTree.GetPyData(wxNode)
-    fnMatRoi='/scratch/detectorData/cSAXS_2013_10_e14608_georgiadis_3D_for_Marianne/analysis/data/pilatus_integration_mask.mat'    
+    
+    dlg = wx.FileDialog(wxTree, "Choose ROI mask file (e.g. pilatus_integration_mask.mat)", os.getcwd(), '','MATLAB files (*.mat)|*.mat|all (*.*)|*.*', wx.OPEN|wx.FD_CHANGE_DIR)
+    if dlg.ShowModal() == wx.ID_OK:
+      fnMatRoi = dlg.GetPath()
+      print 'OnOpen',fnMatRoi
+    dlg.Destroy()       
+    if not fnMatRoi:
+      return      
+    #fnMatRoi='/scratch/detectorData/cSAXS_2013_10_e14608_georgiadis_3D_for_Marianne/analysis/data/pilatus_integration_mask.mat'    
     frame=ProcRoiStatFrame(wxTree,lbl,hid,fnMatRoi)
     frame.Show(True)     
     
@@ -180,7 +188,7 @@ class HdfViewerFrame(wx.Frame):
 
   def OpenFile(self,fnHDF):
     try:
-      self.fid=h5py.h5f.open(fnHDF)
+      self.fid=h5py.h5f.open(fnHDF,flags=h5py.h5f.ACC_RDONLY)
     except IOError as e:
       sys.stderr.write('Unable to open File: '+fnHDF+'\n')
     else: 
@@ -375,13 +383,11 @@ class HdfViewerFrame(wx.Frame):
 if __name__ == '__main__':
   def GetArgs():   
     import sys,argparse #since python 2.7
-    fnHDF='/scratch/detectorData/e14472_00033.hdf5'
-
-    exampleCmd='--hdfFile='+fnHDF    
+    exampleCmd='/scratch/detectorData/e14472_00033.hdf5'
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=__doc__,
                                      epilog='Example:\n'+os.path.basename(sys.argv[0])+' '+exampleCmd+'\n ')
-    parser.add_argument('hdfFile',   nargs='?', default=fnHDF, help='the hdf5 to show')
+    parser.add_argument('hdfFile',   nargs='?', help='the hdf5 to show')
     
     args = parser.parse_args()
     return args
@@ -390,7 +396,8 @@ if __name__ == '__main__':
     def OnInit(self):
       args=GetArgs()
       frame = HdfViewerFrame(None, 'h5pyViewer')
-      frame.OpenFile(args.hdfFile)
+      if args.hdfFile:
+        frame.OpenFile(args.hdfFile)
       frame.Show(True)
       self.SetTopWindow(frame)
       return True

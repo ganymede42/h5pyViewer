@@ -3,8 +3,8 @@
 #FOR DISTUTILS READ:
 #http://docs.python.org/2/distutils/index.html
 
-import distutils.core, distutils.dist
-import distutils.command.sdist, distutils.command.build_py,distutils.command.install_lib
+import distutils.core
+import distutils.command.install_lib,distutils.command.install
 import re
 
 import sys,os,platform,subprocess
@@ -77,10 +77,29 @@ def getVersion():
   print ':'+ver+':'+gitcmt
   return (ver,gitcmt)
 
+class MyINSTALL (distutils.command.install.install):
+    def run(self):
+        distutils.command.install.install.run(self)
+        print 'post_install_message'
+
+class MyINSTALL_LIB (distutils.command.install_lib.install_lib):
+  def run(self):
+    print 'MyINSTALL_LIB.run()'
+    distutils.command.install_lib.install_lib.run(self)
+    instDir=os.path.join(self.install_dir,'h5pyViewer')
+    print instDir
+    if platform.system()=='Linux':
+      for fn in('h5pyViewer','hdfAttrib','hdfGrid','hdfImageGL','hdfImage','hdfTree'):
+        fn=os.path.join(instDir,fn+'.py')
+        print 'chmod '+fn
+        os.chmod(fn,0774)
+    pass
+
+
 def runSetup(**kv):
   ver=getVersion()
 
-  args={#'cmdclass'    :{'sdist': MySDIST, 'build_py': MyBUILD_PY, 'install_lib':MyINSTALL_LIB},
+  args={'cmdclass'    :{'install_lib':MyINSTALL_LIB},
         'name'        :'h5pyViewer',
         'version'     : ver[0],
         'description' :'(git:'+ver[1]+') HDF5-File-Viewer',
