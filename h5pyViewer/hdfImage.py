@@ -90,15 +90,18 @@ class MPLCanvasImg(FigureCanvas):
     avg=np.average(data); std=np.std(data)
     vmin=np.min(data);vmax=np.max(data)
     vmin=max(vmin,avg-3*std);vmax=min(vmax,avg+3*std)
-    if vmax==vmin:
-      vmax+=1
-    vmin=1
-    norm=ShiftedLogNorm()
+    if vmin==0:vmin=1
+    if vmax<=vmin:
+      vmax=vmin+1
+
+    #norm=ShiftedLogNorm()
+    norm=mpl.colors.Normalize()
     #img = ax.imshow(data,interpolation='nearest',cmap=mpl.cm.jet, norm=ShiftedLogNorm(vmin=vmin, vmax=vmax))
 
     img = ax.imshow(data,interpolation='nearest',cmap=mpl.cm.jet, vmin=vmin, vmax=vmax)
     colBar=fig.colorbar(img,orientation='vertical',norm=norm)
-    colBar.norm=ShiftedLogNorm(vmin=vmin, vmax=vmax)
+    #colBar.norm=ShiftedLogNorm(vmin=vmin, vmax=vmax)
+    colBar.norm=mpl.colors.Normalize(vmin=vmin, vmax=vmax)
     img.set_norm(colBar.norm)
     img.cmap._init();bg=img.cmap._lut[0].copy();bg[:-1]/=4
     ax.set_axis_bgcolor(bg)    
@@ -413,6 +416,8 @@ class HdfImageFrame(wx.Frame):
     mnItem=mn.Append(wx.ID_ANY, 'Invert Y-Axis', kind=wx.ITEM_CHECK);self.Bind(wx.EVT_MENU, self.OnInvertAxis, mnItem)
     mnItem=mn.Append(wx.ID_ANY, 'Show Moments', 'Show image moments ', kind=wx.ITEM_CHECK);self.Bind(wx.EVT_MENU, self.OnShowMoments, mnItem)
     self.mnItemShowMoment=mnItem
+    mnItem=mn.Append(wx.ID_ANY, 'Tomo Normalize', 'Multiplies each pixel with a normalization factor. Assumes there exist an array exchange/data_white', kind=wx.ITEM_CHECK);self.Bind(wx.EVT_MENU, self.OnTomoNormalize, mnItem)
+    self.mnItemTomoNormalize=mnItem
     mnBar.Append(mn, '&Edit')
     mn = wx.Menu()
     mnItem=mn.Append(wx.ID_ANY, 'Help', 'How to use the image viewer');self.Bind(wx.EVT_MENU, self.OnHelp, mnItem)
@@ -441,7 +446,14 @@ class HdfImageFrame(wx.Frame):
     data=imgFrm.data
     sl=ut.GetSlice(imgFrm.idxXY,data.shape,imgFrm.wxAxCtrlLst)   
 
-    imgFrm.canvas.img.set_array(data[sl])
+    try:
+      tomoNorm=imgFrm.tomoNorm
+    except AttributeError:
+      imgFrm.canvas.img.set_array(data[sl])
+    else:
+      data=data[sl]*tomoNorm
+      imgFrm.canvas.img.set_array(data)
+
     if imgFrm.mnItemShowMoment.IsChecked():
       imgFrm.PlotMoments()       
     imgFrm.canvas.draw()
@@ -530,6 +542,32 @@ class HdfImageFrame(wx.Frame):
     self.goMoment=ProcMoment.PlotMoments(ax, xbar, ybar, cov)
     ax.axis('image')
 
+  def OnTomoNormalize(self,event):
+    if event.IsChecked():
+      #try to find white image
+      #calculate average
+      #show white normalize factors
+      white=self.data.parent['data_white']
+      tomoNorm=white[1,:,:]
+      #tomoNorm=white[:,:,:].mean(axis=0)
+      #np.iinfo(tomoNorm.dtype).max
+      #tomoNorm=float(np.iinfo(tomoNorm.dtype).max/2)/tomoNorm
+      tomoNorm=tomoNorm.mean()/tomoNorm
+      #tomoNorm=tomoNorm/float(np.iinfo(tomoNorm.dtype).max)
+      data=self.canvas.img.get_array()     
+      data*=tomoNorm
+      #data/=tomoNorm
+      self.tomoNorm=tomoNorm
+      self.canvas.img.set_array(data)
+    else:
+      tomoNorm=self.tomoNorm
+      data=self.canvas.img.get_array()     
+      data/=tomoNorm
+      self.canvas.img.set_array(data)
+      del self.tomoNorm     
+    self.canvas.draw()             
+    
+    
   def OnHelp(self,event):
     msg='''to change the image selection:
 use the toolbar at the bottom to pan and zoom the image

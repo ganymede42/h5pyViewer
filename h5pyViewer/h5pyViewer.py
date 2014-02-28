@@ -333,11 +333,18 @@ class HdfViewerFrame(wx.Frame):
     except ValueError as e:
       pass
     else:
-      txt+='Attributes:%d\n'%numAttr
+      if numAttr>20:
+        txt+='Attributes:%d (too many to show)\n'%numAttr
+      else:
+        txt+='Attributes:%d\n'%numAttr
+        for idxAttr in range(numAttr):
+          aid=h5py.h5a.open(hid,index=idxAttr)
+          txt+='\t'+aid.name+'\t'+str(GetAttrVal(aid))+'\n'
+    val=None
     if t==h5py.h5g.GroupID:
       pass
     elif t==h5py.h5d.DatasetID:
-      txt+='shape: '+str(hid.shape)+'\n'
+      txt+='\nshape: '+str(hid.shape)+'\n'
       tt=hid.get_type()
       ttt=type(tt)
       if ttt==h5py.h5t.TypeCompoundID:
@@ -366,9 +373,12 @@ class HdfViewerFrame(wx.Frame):
         try: v=func(pl)
         except ValueError as e: pass
         else:txt+=tx+':'+str(v)+'\n'
-      if hid.shape==(1,):
-        data=h5py.Dataset(hid)
-        txt+='value:'+str(data[0])+'\n'
+        
+      if hid.shape==() or np.prod(hid.shape)<10: #show up to max. 10 element arrays
+      #if  ttt==h5py.h5t.TypeStringID or hid.shape==() or hid.shape==(1,):
+        ds=h5py.Dataset(hid)
+        txt+='Value:\n\t'+str(ds.value)+'\n'
+
     return txt
     
   def OnSelChanged(self, event):
