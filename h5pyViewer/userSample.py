@@ -23,7 +23,13 @@ def test1(hid):
 def test2(hid):
   ds=h5py.Dataset(hid)
   ds
-  plt.plot(ds[:,0])
+  plt.plot(ds[:,0].T)
+  plt.show()
+  
+def waveforms(hid):
+  'plots the 10th last waveforms'
+  ds=h5py.Dataset(hid)
+  plt.plot(  ds[-10,:,:])
   plt.show()
 
 def GetAttrVal(aid):

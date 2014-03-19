@@ -46,6 +46,9 @@ class AboutFrame(wx.Frame):
 
     st0=wx.StaticText(panel,-1,s,(30,10))
     bmp = wx.StaticBitmap(panel,-1,wx.Bitmap(os.path.join(imgDir,'splash1.png'), wx.BITMAP_TYPE_ANY ), (30,st0.Position[1]+st0.Size[1]+10))
+    
+    for k,v in os.environ.iteritems():
+      print k,'=',v
 
 class HdfTreePopupMenu(wx.Menu):
   def __init__(self, wxObjSrc):
@@ -73,6 +76,7 @@ class HdfTreePopupMenu(wx.Menu):
     wxTree,wxNode=self.wxObjSrc
     lbl=wxTree.GetItemText(wxNode)
     hid=wxTree.GetPyData(wxNode)
+    if type(hid)==tuple: hid=hid[0] #external link->get dataset
     if type(hid)==h5py.h5f.FileID:
       hid=h5py.h5o.open(hid,'/')     
     frame=HdfAttribFrame(wxTree,lbl,hid)
@@ -82,6 +86,7 @@ class HdfTreePopupMenu(wx.Menu):
     wxTree,wxNode=self.wxObjSrc
     lbl=wxTree.GetItemText(wxNode)
     hid=wxTree.GetPyData(wxNode)
+    if type(hid)==tuple: hid=hid[0] #external link->get dataset
     frame=HdfGridFrame(wxTree,lbl,hid)
     frame.Show(True)  
 
@@ -89,6 +94,7 @@ class HdfTreePopupMenu(wx.Menu):
     wxTree,wxNode=self.wxObjSrc
     lbl=wxTree.GetItemText(wxNode)
     hid=wxTree.GetPyData(wxNode)
+    if type(hid)==tuple: hid=hid[0] #external link->get dataset
     frame=HdfImageFrame(wxTree,lbl,hid)
     frame.Show(True)  
 
@@ -96,6 +102,7 @@ class HdfTreePopupMenu(wx.Menu):
     wxTree,wxNode=self.wxObjSrc
     lbl=wxTree.GetItemText(wxNode)
     hid=wxTree.GetPyData(wxNode)
+    if type(hid)==tuple: hid=hid[0] #external link->get dataset
     frame=HdfImageGLFrame(wxTree,lbl,hid)
     frame.Show(True)     
 
@@ -103,6 +110,7 @@ class HdfTreePopupMenu(wx.Menu):
     wxTree,wxNode=self.wxObjSrc
     lbl=wxTree.GetItemText(wxNode)
     hid=wxTree.GetPyData(wxNode)
+    if type(hid)==tuple: hid=hid[0] #external link->get dataset
     frame=HdfPyFAI1DFrame(wxTree,lbl,hid)
     frame.Show(True)     
     
@@ -110,6 +118,7 @@ class HdfTreePopupMenu(wx.Menu):
     wxTree,wxNode=self.wxObjSrc
     lbl=wxTree.GetItemText(wxNode)
     hid=wxTree.GetPyData(wxNode)
+    if type(hid)==tuple: hid=hid[0] #external link->get dataset
     frame=HdfPyFAIFrame(wxTree,lbl,hid)
     frame.Show(True)     
 
@@ -117,7 +126,7 @@ class HdfTreePopupMenu(wx.Menu):
     wxTree,wxNode=self.wxObjSrc
     lbl=wxTree.GetItemText(wxNode)
     hid=wxTree.GetPyData(wxNode)
-    
+    if type(hid)==tuple: hid=hid[0] #external link->get dataset   
     dlg = wx.FileDialog(wxTree, "Choose ROI mask file (e.g. pilatus_integration_mask.mat)", os.getcwd(), '','MATLAB files (*.mat)|*.mat|all (*.*)|*.*', wx.OPEN|wx.FD_CHANGE_DIR)
     if dlg.ShowModal() == wx.ID_OK:
       fnMatRoi = dlg.GetPath()
@@ -196,7 +205,7 @@ class HdfViewerFrame(wx.Frame):
 
   def CloseFile(self):
     #http://docs.wxwidgets.org/2.8/wx_windowdeletionoverview.html#windowdeletionoverview
-    print 'CloseFile'
+    #print 'CloseFile'
     try:
       self.fid.close()
       del self.fid
@@ -229,18 +238,18 @@ class HdfViewerFrame(wx.Frame):
     self.CloseFile()
   
   def OnOpen(self, event):
-    dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), '','HDF5 files (*.hdf5)|*.hdf5|all (*.*)|*.*', wx.OPEN|wx.FD_CHANGE_DIR)
+    dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), '','HDF5 files (*.hdf5;*.h5)|*.hdf5;*.h5|all (*.*)|*.*', wx.OPEN|wx.FD_CHANGE_DIR)
     if dlg.ShowModal() == wx.ID_OK:
       path = dlg.GetPath()
       #mypath = os.path.basename(path)
       #self.SetStatusText("You selected: %s" % mypath)
       self.CloseFile()
       self.OpenFile(path)
-      print 'OnOpen',path
+      #print 'OnOpen',path
     dlg.Destroy()       
   
   def OnCloseWindow(self, event):
-    print 'OnCloseWindow'
+    #print 'OnCloseWindow'
     self.Destroy()
     
   def OnAbout(self,event):
@@ -403,6 +412,7 @@ if __name__ == '__main__':
     return args
 
   class MyApp(wx.App):
+    
     def OnInit(self):
       args=GetArgs()
       frame = HdfViewerFrame(None, 'h5pyViewer')
@@ -412,6 +422,14 @@ if __name__ == '__main__':
       self.SetTopWindow(frame)
       return True
     
-#------------------ Main Code ----------------------------------    
-  app = MyApp()
+#------------------ Main Code ----------------------------------   
+  #redirect stdout/stderr:
+  #http://www.blog.pythonlibrary.org/2009/01/01/wxpython-redirecting-stdout-stderr/
+  #https://groups.google.com/forum/#!topic/wxpython-users/S9uSKIYdYoo
+  #https://17677433047266577941.googlegroups.com/attach/e4d343dc6a751906/REDIRECT.PY?part=2&view=1&vt=ANaJVrFeyCjCMydKnkyfFbYJM7ip07mE-ozUIBxJ5A1QuK1GhycJYJsPTxpAaNk5L2LpXvGhzRPInxDt8_WUcUyK2Ois28Dq8LNebfYoWG9Yxr-tujf5Jk4
+  #http://www.wxpython.org/docs/api/wx.PyOnDemandOutputWindow-class.html
+  rd=not sys.stdout.isatty()#have a redirect window, if there is no console
+  #rd=True #force to open a redirect window
+  #rd=False #avoid a redirect window
+  app = MyApp(redirect=rd)
   app.MainLoop()

@@ -505,7 +505,11 @@ class HdfImageFrame(wx.Frame):
     pm=self.procMoment
 
     #data=ndi.median_filter(data, 3)
-    data[pm.mask==False]=0
+    try:
+      data.ravel()[pm.mskIdx]=0
+    except AttributeError as e:
+      print e
+
     #data=np.log(data+1)
     #data[100:110,500:510]=1000 #y,x
     #data[650:850,700:850]=0 #y,x
