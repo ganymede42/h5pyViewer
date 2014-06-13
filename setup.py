@@ -55,7 +55,7 @@ def getVersion():
 
   fn='./PKG-INFO'
   if os.access(fn, os.R_OK):
-    sys.stdout.write('getVersion() -> Parsing '+fn)
+    sys.stdout.write('getVersion() -> Parsing '+fn+' -> ')
     fo=open(fn,'r')
     for ln in fo.readlines():
       if ln.startswith('Version:'):
@@ -66,15 +66,20 @@ def getVersion():
     fo.close()
   else:
     argv=sys.argv
-    p = subprocess.Popen('git rev-list HEAD', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    #p = subprocess.Popen('git log --pretty=%h', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    sys.stdout.write('getVersion() -> using git command -> ')
+    #p = subprocess.Popen('git rev-list HEAD', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    #retval = p.wait()
+    #res=p.stdout.readlines()
+    #ver=len(res)
+    #ver='0.0.0.'+str(ver)
+    #gitcmt=res[0][:7]
+    p = subprocess.Popen('git describe --match ''v*.*.*'' --long', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     retval = p.wait()
-    res=p.stdout.readlines()
-    ver=len(res)
-    ver='0.0.0.'+str(ver)
-    gitcmt=res[0][:7]
-    sys.stdout.write('getVersion() -> using git command')
-  print ':'+ver+':'+gitcmt
+    res=p.stdout.readline()
+    res=res[1:-1].rsplit('-',1)
+    ver=res[0].replace('-','.')
+    gitcmt=res[1][1:]
+  print ':'+ver+':'+gitcmt+':'
   return (ver,gitcmt)
 
 class MyINSTALL (distutils.command.install.install):
