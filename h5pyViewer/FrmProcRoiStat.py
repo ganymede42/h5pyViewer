@@ -40,7 +40,7 @@ class ProcRoiStatFrame(HdfImageGLFrame):
     #HdfPyFAI1DFrame(self, title, hid)
     canvas=self.canvas
     raw=canvas.data
-    
+
     self.prs=prs=ProcRoiStat()
     prs.SetRoiMat(fnMatRoi,raw.shape)
     prs.SetProcess('avg')
@@ -68,7 +68,7 @@ class ProcRoiStatFrame(HdfImageGLFrame):
     canvas=frm.canvas
     glImg=canvas.glImg
     sl=ut.GetSlice(frm.idxXY,ds.shape,frm.wxAxCtrlLst)
-    
+
     prs=frm.prs
     prs.Process(ds[sl])
     #canvas.data[:]=(np.rot90(prs.resArr[0,:].reshape(-1,prs.mskNumSeg)))[:]
@@ -87,14 +87,14 @@ class ProcRoiStatFrame(HdfImageGLFrame):
     dlg.Destroy()
 
 
-  
+
 if __name__ == '__main__':
   import os,sys,argparse #since python 2.7
   def GetParser(required=True):
     fnHDF='/scratch/detectorData/cSAXS_2013_10_e14608_georgiadis_3D_for_Marianne/scan_00106-00161.hdf5'
     lbl='pilatus_1'
     elem='/entry/data/'+lbl
-    fnMatRoi='/scratch/detectorData/cSAXS_2013_10_e14608_georgiadis_3D_for_Marianne/analysis/data/pilatus_integration_mask.mat'    
+    fnMatRoi='/scratch/detectorData/cSAXS_2013_10_e14608_georgiadis_3D_for_Marianne/analysis/data/pilatus_integration_mask.mat'
     exampleCmd='--hdfFile='+fnHDF+' --elem='+elem
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=__doc__,

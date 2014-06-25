@@ -25,10 +25,10 @@ class Table1DArray(wx.grid.PyGridTableBase):
 
   def GetRowLabelValue(self,idx):
     return idx
-  
+
 #  def GetColLabelValue(self,idx):
-#    return 
-  
+#    return
+
   def GetNumberRows(self):
     #ut.StopWatch.Log('GetNumberRows')
     return self.data.shape[0]
@@ -51,10 +51,10 @@ class Table2DArray(wx.grid.PyGridTableBase):
 
   def GetRowLabelValue(self,idx):
     return idx
-  
+
   def GetColLabelValue(self,idx):
     return idx
-  
+
   def GetNumberRows(self):
     #ut.StopWatch.Log('GetNumberRows')
     return self.view.shape[0]
@@ -79,10 +79,10 @@ class TableCompound(wx.grid.PyGridTableBase):
 
   def GetRowLabelValue(self,idx):
     return idx
-  
+
   def GetColLabelValue(self,idx):
     return self.view.dtype.names[idx]
-  
+
   def GetNumberRows(self):
     #ut.StopWatch.Log('GetNumberRows')
     return self.view.shape[0]
@@ -98,7 +98,7 @@ class TableCompound(wx.grid.PyGridTableBase):
 class Grid(wx.grid.Grid):
   def __init__(self, parent, data):
     wx.grid.Grid.__init__(self, parent, -1)
-    
+
     self.SetDefaultColSize(50)
     self.SetDefaultRowSize(17)
     font=self.GetLabelFont()
@@ -110,7 +110,7 @@ class Grid(wx.grid.Grid):
     self.SetDefaultCellFont(font)
     #self.SetDefaultCellAlignment(wx.ALIGN_RIGHT,wx.ALIGN_CENTRE)
     self.SetDefaultCellAlignment(wx.ALIGN_CENTRE,wx.ALIGN_CENTRE)
-   
+
     #self.SetDefaultRenderer
 
   @staticmethod
@@ -120,7 +120,7 @@ class Grid(wx.grid.Grid):
     tbl=grid.GetTable()
     data=tbl.data
     sl=ut.GetSlice(tbl.idxXY,data.shape,gridFrm.wxAxCtrlLst)
-    
+
     #tbl.view = tbl.data[value,...]
     tbl.view = tbl.data[sl]
     grid.ClearGrid()
@@ -143,7 +143,7 @@ class HdfGridFrame(wx.Frame):
     else:
       raise(TypeError('unhandled type'))
     grid = Grid(pan, data)
-    
+
     tbl=grid.GetTable()
 
     sizer = wx.BoxSizer(wx.VERTICAL)
@@ -162,15 +162,15 @@ class HdfGridFrame(wx.Frame):
         #idxXY=(l-1,l-2)
         for idx,l in enumerate(data.shape):
           if idx in idxXY:
-            continue 
+            continue
           wxAxCtrl=ut.SliderGroup(pan, label='Axis:%d'%idx,range=(0,l-1))
           wxAxCtrl.idx=idx
           wxAxCtrlLst.append(wxAxCtrl)
           sizer.Add(wxAxCtrl.sizer, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, border=5)
           wxAxCtrl.SetCallback(Grid.OnSetView,wxAxCtrl)
-        
+
         sl=ut.GetSlice(idxXY,data.shape,wxAxCtrlLst)
-    
+
         tbl = Table2DArray(data)
         tbl.idxXY=idxXY
         if idxXY[0]<idxXY[1]:
@@ -178,17 +178,17 @@ class HdfGridFrame(wx.Frame):
         else:
           tbl.view = tbl.data[sl].T
       self.wxAxCtrlLst=wxAxCtrlLst
-    grid.SetTable (tbl, True)   
-       
+    grid.SetTable (tbl, True)
+
     self.grid=grid
 
     pan.SetSizer(sizer)
     pan.Layout()
     self.Centre()
-    
+
 if __name__ == '__main__':
   import os,sys,argparse #since python 2.7
-  def GetParser(required=True):   
+  def GetParser(required=True):
     fnHDF='/scratch/detectorData/e14472_00033.hdf5'
     #lbl='mcs'
     #lbl='pilatus_1'
@@ -199,7 +199,7 @@ if __name__ == '__main__':
                                      description=__doc__,
                                      epilog='Example:\n'+os.path.basename(sys.argv[0])+' '+exampleCmd+'\n ')
     parser.add_argument('--hdfFile', required=required, default=fnHDF, help='the hdf5 to show')
-    parser.add_argument('--elem', required=required, default=elem, help='the path to the element in the hdf5 file')   
+    parser.add_argument('--elem', required=required, default=elem, help='the path to the element in the hdf5 file')
     return parser
     args = parser.parse_args()
     return args

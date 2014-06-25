@@ -15,7 +15,7 @@ import numpy as np
 from hdfGrid import *
 
 def GetAttrVal(aid):
-  rtdt = h5py._hl.dataset.readtime_dtype(aid.dtype, []) 
+  rtdt = h5py._hl.dataset.readtime_dtype(aid.dtype, [])
   arr = np.ndarray(aid.shape, dtype=rtdt, order='C')
   aid.read(arr)
   if len(arr.shape) == 0:
@@ -34,7 +34,7 @@ class HdfAttrListCtrl(wx.ListCtrl):
     self.SetColumnWidth(2, 60)
     self.SetColumnWidth(3, 160)
     self.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnActivateItem, self)
-    
+
   def ShowAttr(self,hid):
     self.hid=hid
     self.DeleteAllItems()
@@ -54,7 +54,7 @@ class HdfAttrListCtrl(wx.ListCtrl):
         pass
       else:
         unit=GetAttrVal(aidUnit)
-        self.SetStringItem(idxItem, 2, unit)  
+        self.SetStringItem(idxItem, 2, unit)
       t=type(val)
       if t==np.ndarray:
         tStr=str(val.dtype)+str(val.shape)
@@ -67,7 +67,7 @@ class HdfAttrListCtrl(wx.ListCtrl):
       self.SetStringItem(idxItem, 3, tStr)
       #http://wiki.wxpython.org/ListControls
       #only intergers can be associate
-      self.SetItemData(idxItem, idxAttr)    
+      self.SetItemData(idxItem, idxAttr)
 
   def OnActivateItem(self,event):
     hid=self.hid
@@ -75,9 +75,9 @@ class HdfAttrListCtrl(wx.ListCtrl):
     val=GetAttrVal(aid)
     if type(val)!=np.ndarray:
       print val
-      return    
+      return
     frame=HdfGridFrame(self,aid.name,val)
-    frame.Show(True)  
+    frame.Show(True)
 
 class HdfAttribFrame(wx.Frame):
   def __init__(self, parent,lbl,hid):
@@ -85,14 +85,14 @@ class HdfAttribFrame(wx.Frame):
     imgDir=ut.Path.GetImage()
     icon = wx.Icon(os.path.join(imgDir,'h5pyViewer.ico'), wx.BITMAP_TYPE_ICO)
     self.SetIcon(icon)
-    self.wxLstCtrl=HdfAttrListCtrl(self)  
-    self.wxLstCtrl.ShowAttr(hid)  
+    self.wxLstCtrl=HdfAttrListCtrl(self)
+    self.wxLstCtrl.ShowAttr(hid)
     self.Centre()
- 
+
 if __name__ == '__main__':
   import utilities as ut
   import os,sys,argparse #since python 2.7
-  def GetParser(required=True):   
+  def GetParser(required=True):
     fnHDF='/scratch/detectorData/e14472/scan_00030-00033.hdf5'
     #lbl='mcs'
     #lbl='pilatus_1'
@@ -103,7 +103,7 @@ if __name__ == '__main__':
                                      description=__doc__,
                                      epilog='Example:\n'+os.path.basename(sys.argv[0])+' '+exampleCmd+'\n ')
     parser.add_argument('--hdfFile', required=required, default=fnHDF, help='the hdf5 to show')
-    parser.add_argument('--elem', required=required, default=elem, help='the path to the element in the hdf5 file')   
+    parser.add_argument('--elem', required=required, default=elem, help='the path to the element in the hdf5 file')
     return parser
     args = parser.parse_args()
     return args

@@ -38,7 +38,7 @@ class SliderGroup():
     self.sliderLabel = wx.StaticText(parent, label=label)
     self.sliderText = wx.TextCtrl(parent, -1, style=wx.TE_PROCESS_ENTER)
     self.slider = wx.Slider(parent, -1)
-    self.slider.SetRange(range[0],range[1])      
+    self.slider.SetRange(range[0],range[1])
     sizer = wx.BoxSizer(wx.HORIZONTAL)
     sizer.Add(self.sliderLabel, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, border=2)
     sizer.Add(self.sliderText, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, border=2)
@@ -52,7 +52,7 @@ class SliderGroup():
     self.value = value
     self.slider.SetValue(value)
     self.sliderText.SetValue(str(value))
-  
+
   def SetCallback(self,funcCB,usrData):
     self.cbFuncData=(funcCB,usrData)
 
@@ -68,15 +68,15 @@ class SliderGroup():
     value = evt.GetInt()
     self.sliderText.SetValue(str(value))
     self.value=value
-    self.Callback(value,0)      
-      
+    self.Callback(value,0)
+
   def sliderTextHandler(self, evt):
     value = int(self.sliderText.GetValue())
     self.slider.SetValue(value)
     value = self.slider.Value
     self.sliderText.SetValue(str(value))
     self.value=value
-    self.Callback(value,0)      
+    self.Callback(value,0)
 
 def GetSlice(idxXY,shp,wxAxCtrlLst):
   '''returns a slice list to select data'''

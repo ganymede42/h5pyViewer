@@ -16,7 +16,7 @@ import sys,os,platform,subprocess
 #python setup.py build
 #python setup.py build
 
-#python setup.py install --prefix=~/ 
+#python setup.py install --prefix=~/
 #python setup.py bdist_egg
 
 #python setup.py install --root tmp
@@ -120,7 +120,7 @@ def runSetup(**kv):
         'packages'    :['h5pyViewer'],
         #'package_dir' :{'h5pyViewer':'.'},
         'package_data':{'h5pyViewer': ['images/*.png','images/*.ico']},
-        #'requires' requires: h5py==2.0.1 libDetXR==0.0.0.6 numpy==1.7.1 matplotlib==1.2.0 
+        #'requires' requires: h5py==2.0.1 libDetXR==0.0.0.6 numpy==1.7.1 matplotlib==1.2.0
         'requires' : ['ctypes','h5py','numpy','matplotlib']
       }
   if kv:

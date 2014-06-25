@@ -25,7 +25,7 @@ def test2(hid):
   ds
   plt.plot(ds[:,0].T)
   plt.show()
-  
+
 def waveforms(hid):
   'plots the 10th last waveforms'
   ds=h5py.Dataset(hid)
@@ -33,7 +33,7 @@ def waveforms(hid):
   plt.show()
 
 def GetAttrVal(aid):
-  rtdt = h5py._hl.dataset.readtime_dtype(aid.dtype, []) 
+  rtdt = h5py._hl.dataset.readtime_dtype(aid.dtype, [])
   arr = np.ndarray(aid.shape, dtype=rtdt, order='C')
   aid.read(arr)
   if len(arr.shape) == 0:

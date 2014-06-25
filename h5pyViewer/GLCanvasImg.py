@@ -45,11 +45,11 @@ def MplAddColormap(m,lut):
     else:
       kLst=np.linspace(0., 1., num=len(lut))
       lut2=zip(kLst,lut)
-  
+
   #cmap = Colormap('gray',(0., (0.,0.,0.,1.)),(1., (1.,1.,1.,1.)))
   cm2=glumpy.colormap.Colormap(m,*tuple(lut2))
-  setattr(glumpy.colormap,m,cm2)  
-  
+  setattr(glumpy.colormap,m,cm2)
+
 def MplAddAllColormaps(colMapNameLst=None):
   try:
     import matplotlib.cm as cm
@@ -60,7 +60,7 @@ def MplAddAllColormaps(colMapNameLst=None):
   for m in colMapNameLst:
     lut= cm.datad[m]
     MplAddColormap(m,lut)
-  pass 
+  pass
 
 class GLCanvasImg(wx.glcanvas.GLCanvas):
   """A simple class for using OpenGL with wxPython."""
@@ -84,7 +84,7 @@ class GLCanvasImg(wx.glcanvas.GLCanvas):
     self.Bind(wx.EVT_MOTION, self.OnMouseEvent)
     self.Bind(wx.EVT_LEFT_DOWN, self.OnMouseEvent)
     self.Bind(wx.EVT_LEFT_UP, self.OnMouseEvent)
-    
+
   def OnMouseEvent(self, event):
     try:
       data=self.data
@@ -105,7 +105,7 @@ class GLCanvasImg(wx.glcanvas.GLCanvas):
         ic=self.imgCoord
         pOfs=(ic[0::4]+[.5,.5])*pSz
         tPos=(pMouse-pOfs)/(pSz-2*pOfs)#position on the image 0..1
-        #print tPos 
+        #print tPos
         if (tPos<0).any() or (tPos>1).any(): return
         tPos=tPos*(ic[3::4]-ic[1::4])+ic[1::4]
         tPos[0]*=data.shape[1]
@@ -117,7 +117,7 @@ class GLCanvasImg(wx.glcanvas.GLCanvas):
 
         #vS=event.GetPosition()[0]
         pass
-      else: 
+      else:
         #prefix:
         #p Pixel, t Texture, v vertex
         pSz = np.array(self.GetClientSize(),np.float32)
@@ -127,7 +127,7 @@ class GLCanvasImg(wx.glcanvas.GLCanvas):
         pOfs=(ic[0::4]+[.5,.5])*pSz
         tOfs=(pMouse-pStart)/(pSz-2*pOfs)#position on the image 0..1
         tOfs=tOfs*(icStart[3::4]-icStart[1::4])
-        
+
         if icStart[1]-tOfs[0]<0:
           tOfs[0]=icStart[1]
         if icStart[5]-tOfs[1]<0:
@@ -136,12 +136,12 @@ class GLCanvasImg(wx.glcanvas.GLCanvas):
           tOfs[0]=icStart[3]-1
         if icStart[7]-tOfs[1]>1:
           tOfs[1]=icStart[7]-1
-          
+
         #print icStart[1::4],icStart[3::4],tOfs
 
         ic[1::4]=icStart[1::4]-tOfs
         ic[3::4]=icStart[3::4]-tOfs
-            
+
         self.SetZoom()
         self.Refresh(False)
     #event.Skip()
@@ -152,7 +152,7 @@ class GLCanvasImg(wx.glcanvas.GLCanvas):
     #p Pixel, t Texture, v vertex
     pSz = np.array(self.GetClientSize(),np.float32)
     pMouse  = np.array(event.GetPosition(),np.float32)
-    ic=self.imgCoord    
+    ic=self.imgCoord
     n=event.GetWheelRotation()
     pOfs=(ic[0::4]+[.5,.5])*pSz
     tPos=(pMouse-pOfs)/(pSz-2*pOfs)#position on the image 0..1
@@ -211,7 +211,7 @@ class GLCanvasImg(wx.glcanvas.GLCanvas):
     try: glImg=self.glImg
     except AttributeError: pass
     else:  self.glImg.draw(ic[0],ic[4],0,ic[2]-ic[0],ic[6]-ic[4])
-    self.glColBar.draw(-.5,-.5,0,1.,.02)       
+    self.glColBar.draw(-.5,-.5,0,1.,.02)
     # Drawing an example triangle in the middle of the screen
     #glBegin(GL_TRIANGLES)
     #glColor(1, 0, 0)
@@ -237,7 +237,7 @@ use mouse wheel to zoom in/out the image at a given point
     if dlg.ShowModal()==wx.ID_OK:
       pass
     dlg.Destroy()
-    
+
   def SetZoom(self):
     ic=self.imgCoord
     xmin,xmax,ymin,ymax=ic[1::2];
@@ -266,7 +266,7 @@ use mouse wheel to zoom in/out the image at a given point
       if glImg.data.shape==self.data.shape:
         glImg.data[:]=txrData[:]
       else:
-        self.glImg=glImg=glumpy.image.Image(txrData, colormap=colMap,vmin=glImg._vmin, vmax=glImg._vmax)   
+        self.glImg=glImg=glumpy.image.Image(txrData, colormap=colMap,vmin=glImg._vmin, vmax=glImg._vmax)
     glImg.update()
 
   def GetTxrRange(self):
@@ -276,18 +276,18 @@ use mouse wheel to zoom in/out the image at a given point
       return dataRange
     elif txrTrfFunc==1:
       return (0,np.log(1+dataRange[1]-dataRange[0]))
-  
+
   def AutoRange(self,txrTrfFunc):
     data=self.data
     self.txrTrfFunc=txrTrfFunc
     if txrTrfFunc==0:
       avg=np.average(data); std=np.std(data)
       vmin=data.min();vmax=data.max()
-      vmin=max(vmin,avg-3*std);vmax=min(vmax,avg+3*std)      
+      vmin=max(vmin,avg-3*std);vmax=min(vmax,avg+3*std)
     elif txrTrfFunc==1:
-      avg=np.average(data); std=np.std(data)     
+      avg=np.average(data); std=np.std(data)
       vmin=data.min();vmax=data.max()
-      vmin=max(vmin,avg-3*std);vmax=min(vmax,avg+3*std)                 
+      vmin=max(vmin,avg-3*std);vmax=min(vmax,avg+3*std)
     self.dataRange=(vmin,vmax)
 
   def GetTxrData(self):
@@ -295,7 +295,7 @@ use mouse wheel to zoom in/out the image at a given point
     try:
       txrTrfFunc=self.txrTrfFunc
     except AttributeError as e:
-      self.AutoRange(1)     
+      self.AutoRange(1)
       txrTrfFunc=self.txrTrfFunc
 
     if txrTrfFunc==0:
@@ -307,7 +307,7 @@ use mouse wheel to zoom in/out the image at a given point
       ofs=1.-self.dataRange[0]
       txrData=np.log(data[...].astype(np.float32)+ofs)
     return txrData
-  
+
   def InitGL(self):
     """Initialize OpenGL for use in the window."""
     #print 'InitGL'
@@ -315,9 +315,9 @@ use mouse wheel to zoom in/out the image at a given point
     colMap=glumpy.colormap.Hot
     txrColBar=np.linspace(0.,1., 256).astype(np.float32)
     self.glColBar=glumpy.image.Image(txrColBar, colormap=colMap,vmin=0, vmax=1)
-   
+
     self.UpdateImg()
-    self.imgCoord=np.array([-.49,0,.49,1,-.49,0,.49,1])#xmin,xmax,umin,umax,ymin,ymax,vmin,vmax    
+    self.imgCoord=np.array([-.49,0,.49,1,-.49,0,.49,1])#xmin,xmax,umin,umax,ymin,ymax,vmin,vmax
     pass
 
   def Reshape(self, width, height):
@@ -337,24 +337,24 @@ class DlgColBarSetup(wx.Dialog):
     wx.Dialog.__init__(self,parent,-1,'Colormap Setup')
     #glImg=parent.glImg
     #glColBar=parent.glColBar
-    dataRange=parent.dataRange   
+    dataRange=parent.dataRange
     txtVMin=wx.StaticText(self,-1,'vmin')
     txtVMax=wx.StaticText(self,-1,'vmax')
-    txtColMap=wx.StaticText(self,-1,'colormap')   
+    txtColMap=wx.StaticText(self,-1,'colormap')
     self.edVMin=edVMin=wx.TextCtrl(self,-1,'%g'%dataRange[0],style=wx.TE_PROCESS_ENTER)
     self.edVMax=edVMax=wx.TextCtrl(self,-1,'%g'%dataRange[1],style=wx.TE_PROCESS_ENTER)
 
-    txtTxrFunc=wx.StaticText(self,-1,'function')   
+    txtTxrFunc=wx.StaticText(self,-1,'function')
     self.cbtxrFunc=cbtxrFunc=wx.ComboBox(self, -1, choices=('linear','logarithmic'), style=wx.CB_READONLY)
     cbtxrFunc.SetSelection(parent.txrTrfFunc)
-    
+
     colMapLst=[]
     #adding all existing colormaps
     #MplAddAllColormaps()
     #for (k,v) in glumpy.colormap.__dict__.iteritems():
     #  if isinstance(v,glumpy.colormap.Colormap):
     #    colMapLst.append(k)
-        
+
     #adding best existing colormaps of glumpy and mpl
     for k in ('Hot','spectral','jet','Grey','RdYlBu','hsv','gist_stern','gist_rainbow','IceAndFire','gist_ncar'):
       try:
@@ -374,7 +374,7 @@ class DlgColBarSetup(wx.Dialog):
 
     self.cbColMap=cbColMap=wx.ComboBox(self, -1, choices=colMapLst, style=wx.CB_READONLY)
     cbColMap.Value=parent.glImg._filter.colormap.name
-    
+
     sizer=wx.BoxSizer(wx.VERTICAL)
     fgs=wx.FlexGridSizer(4,2,5,5)
     fgs.Add(txtVMin,0,wx.ALIGN_RIGHT)
@@ -418,20 +418,19 @@ class DlgColBarSetup(wx.Dialog):
       glImg._filter.build()
       glColBar._filter.colormap=cmap
       glColBar._filter.build()
-      glColBar.update()   
-    
+      glColBar.update()
+
     parent.dataRange=(float(self.edVMin.Value),float(self.edVMax.Value))
     v=self.cbtxrFunc.GetCurrentSelection()
     if v==1 or v!=parent.txrTrfFunc:
-      parent.txrTrfFunc=v  
-      txrRange=parent.GetTxrRange()   
+      parent.txrTrfFunc=v
+      txrRange=parent.GetTxrRange()
       glImg._vmin, glImg._vmax = txrRange
       parent.UpdateImg()
     else:
-      txrRange=parent.GetTxrRange()   
+      txrRange=parent.GetTxrRange()
       glImg._vmin, glImg._vmax = txrRange
       glImg.update()
     parent.Refresh(False)
     if event.GetId()==wx.ID_OK:
       event.Skip()#do not consume (use event to close the window and sent return code)
-  

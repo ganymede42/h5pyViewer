@@ -27,7 +27,7 @@ try:
   from FrmProcRoiStat import ProcRoiStatFrame
 except ImportError as e:
   print 'ImportError: '+e.message
-  
+
 import utilities as ut
 
 
@@ -46,7 +46,7 @@ class AboutFrame(wx.Frame):
 
     st0=wx.StaticText(panel,-1,s,(30,10))
     bmp = wx.StaticBitmap(panel,-1,wx.Bitmap(os.path.join(imgDir,'splash1.png'), wx.BITMAP_TYPE_ANY ), (30,st0.Position[1]+st0.Size[1]+10))
-    
+
     for k,v in os.environ.iteritems():
       print k,'=',v
 
@@ -60,7 +60,7 @@ class HdfTreePopupMenu(wx.Menu):
     self.AddMenu(self.OnShowImageGL,"Show Image OpenGL")
     self.AddMenu(self.OnShowImgFAI1D,"Show Azimutal Integral Image 1D")
     self.AddMenu(self.OnShowImgFAI2D,"Show Azimutal Integral Image 2D")
-    self.AddMenu(self.OnShowRoiStat,"Show Roi Statistics")   
+    self.AddMenu(self.OnShowRoiStat,"Show Roi Statistics")
     self.AddMenu(self.OnShell,"Python Shell")
     self.AddMenu(self.OnPrintProperties,"Print Properties")
     self.AddMenu(self.OnItem2,"Item Two")
@@ -71,24 +71,24 @@ class HdfTreePopupMenu(wx.Menu):
     self.AppendItem(item);
     self.Bind(wx.EVT_MENU, func, item)
     return item
-    
+
   def OnShowAttrib(self, event):
     wxTree,wxNode=self.wxObjSrc
     lbl=wxTree.GetItemText(wxNode)
     hid=wxTree.GetPyData(wxNode)
     if type(hid)==tuple: hid=hid[0] #external link->get dataset
     if type(hid)==h5py.h5f.FileID:
-      hid=h5py.h5o.open(hid,'/')     
+      hid=h5py.h5o.open(hid,'/')
     frame=HdfAttribFrame(wxTree,lbl,hid)
     frame.Show(True)
-    
+
   def OnShowData(self, event):
     wxTree,wxNode=self.wxObjSrc
     lbl=wxTree.GetItemText(wxNode)
     hid=wxTree.GetPyData(wxNode)
     if type(hid)==tuple: hid=hid[0] #external link->get dataset
     frame=HdfGridFrame(wxTree,lbl,hid)
-    frame.Show(True)  
+    frame.Show(True)
 
   def OnShowImage(self, event):
     wxTree,wxNode=self.wxObjSrc
@@ -96,7 +96,7 @@ class HdfTreePopupMenu(wx.Menu):
     hid=wxTree.GetPyData(wxNode)
     if type(hid)==tuple: hid=hid[0] #external link->get dataset
     frame=HdfImageFrame(wxTree,lbl,hid)
-    frame.Show(True)  
+    frame.Show(True)
 
   def OnShowImageGL(self, event):
     wxTree,wxNode=self.wxObjSrc
@@ -104,7 +104,7 @@ class HdfTreePopupMenu(wx.Menu):
     hid=wxTree.GetPyData(wxNode)
     if type(hid)==tuple: hid=hid[0] #external link->get dataset
     frame=HdfImageGLFrame(wxTree,lbl,hid)
-    frame.Show(True)     
+    frame.Show(True)
 
   def OnShowImgFAI1D(self, event):
     wxTree,wxNode=self.wxObjSrc
@@ -112,32 +112,32 @@ class HdfTreePopupMenu(wx.Menu):
     hid=wxTree.GetPyData(wxNode)
     if type(hid)==tuple: hid=hid[0] #external link->get dataset
     frame=HdfPyFAI1DFrame(wxTree,lbl,hid)
-    frame.Show(True)     
-    
+    frame.Show(True)
+
   def OnShowImgFAI2D(self, event):
     wxTree,wxNode=self.wxObjSrc
     lbl=wxTree.GetItemText(wxNode)
     hid=wxTree.GetPyData(wxNode)
     if type(hid)==tuple: hid=hid[0] #external link->get dataset
     frame=HdfPyFAIFrame(wxTree,lbl,hid)
-    frame.Show(True)     
+    frame.Show(True)
 
   def OnShowRoiStat(self, event):
     wxTree,wxNode=self.wxObjSrc
     lbl=wxTree.GetItemText(wxNode)
     hid=wxTree.GetPyData(wxNode)
-    if type(hid)==tuple: hid=hid[0] #external link->get dataset   
+    if type(hid)==tuple: hid=hid[0] #external link->get dataset
     dlg = wx.FileDialog(wxTree, "Choose ROI mask file (e.g. pilatus_integration_mask.mat)", os.getcwd(), '','MATLAB files (*.mat)|*.mat|all (*.*)|*.*', wx.OPEN|wx.FD_CHANGE_DIR)
     if dlg.ShowModal() == wx.ID_OK:
       fnMatRoi = dlg.GetPath()
       print 'OnOpen',fnMatRoi
-    dlg.Destroy()       
+    dlg.Destroy()
     if not fnMatRoi:
-      return      
-    #fnMatRoi='/scratch/detectorData/cSAXS_2013_10_e14608_georgiadis_3D_for_Marianne/analysis/data/pilatus_integration_mask.mat'    
+      return
+    #fnMatRoi='/scratch/detectorData/cSAXS_2013_10_e14608_georgiadis_3D_for_Marianne/analysis/data/pilatus_integration_mask.mat'
     frame=ProcRoiStatFrame(wxTree,lbl,hid,fnMatRoi)
-    frame.Show(True)     
-    
+    frame.Show(True)
+
   def OnShell(self, event):
     wxTree,wxNode=self.wxObjSrc
     frame = wx.Frame(wxTree, -1, "wxPyShell",size=wx.Size(800, 500))
@@ -145,7 +145,7 @@ class HdfTreePopupMenu(wx.Menu):
     icon = wx.Icon(os.path.join(imgDir,'h5pyViewer.ico'), wx.BITMAP_TYPE_ICO)
     frame.SetIcon(icon)
     frame.Centre()
-    wnd=app.GetTopWindow() 
+    wnd=app.GetTopWindow()
     loc={'app'  :app,
          'fid'  :app.GetTopWindow().fid,
          'lbl'  :wxTree.GetItemText(wxNode),
@@ -184,7 +184,7 @@ import userSample as us;reload(us);us.test1(hid)
     lbl=wxTree.GetItemText(wxNode)
     hid=wxTree.GetPyData(wxNode)
     print HdfViewerFrame.GetPropertyStr(wxTree,wxNode)
-    
+
   def OnItem2(self, event):
     print 'OnItem2'
     pass
@@ -200,7 +200,7 @@ class HdfViewerFrame(wx.Frame):
       self.fid=h5py.h5f.open(fnHDF,flags=h5py.h5f.ACC_RDONLY)
     except IOError as e:
       sys.stderr.write('Unable to open File: '+fnHDF+'\n')
-    else: 
+    else:
       self.wxTree.ShowHirarchy(self.fid)
 
   def CloseFile(self):
@@ -229,14 +229,14 @@ class HdfViewerFrame(wx.Frame):
     #wxLstCtrl=HdfAttrListCtrl(wxSplt)
     #wxSplt.SplitVertically(wxTree, wxLstCtrl)
     self.BuildMenu()
-    
+
     self.Centre()
 
     self.wxTree=wxTree
     self.display=wxTxt
   def __del__(self):
     self.CloseFile()
-  
+
   def OnOpen(self, event):
     dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), '','HDF5 files (*.hdf5;*.h5)|*.hdf5;*.h5|all (*.*)|*.*', wx.OPEN|wx.FD_CHANGE_DIR)
     if dlg.ShowModal() == wx.ID_OK:
@@ -246,16 +246,16 @@ class HdfViewerFrame(wx.Frame):
       self.CloseFile()
       self.OpenFile(path)
       #print 'OnOpen',path
-    dlg.Destroy()       
-  
+    dlg.Destroy()
+
   def OnCloseWindow(self, event):
     #print 'OnCloseWindow'
     self.Destroy()
-    
+
   def OnAbout(self,event):
     frame=AboutFrame(self)
     frame.Show()
-    
+
   def BuildMenu(self):
     #http://wiki.wxpython.org/AnotherTutorial#wx.MenuBar
     mnBar = wx.MenuBar()
@@ -265,11 +265,11 @@ class HdfViewerFrame(wx.Frame):
     mnItem=mn.Append(wx.ID_OPEN, '&Open', 'Open a new document');self.Bind(wx.EVT_MENU, self.OnOpen, mnItem)
     #mnSub = wx.Menu()
     #mnItem=mnSub.Append(wx.ID_ANY, 'SubMenuEntry', 'My SubMenuEntry')
-    #mn.AppendMenu(wx.ID_ANY, 'SubMenu', mnSub)   
+    #mn.AppendMenu(wx.ID_ANY, 'SubMenu', mnSub)
     mn.AppendSeparator()
     mnItem=mn.Append(wx.ID_EXIT, '&Quit', 'Quit the Application');self.Bind(wx.EVT_MENU, self.OnCloseWindow, mnItem)
     mnBar.Append(mn, '&File')
-    
+
     self.Bind(wx.EVT_CLOSE, self.OnCloseWindow)
 
     #-------- Edit Menu --------
@@ -281,13 +281,13 @@ class HdfViewerFrame(wx.Frame):
     #mnItem=mn.Append(wx.ID_HELP,'Help','Application Help')
     mnItem=mn.Append(wx.ID_ABOUT,'About','Application About');self.Bind(wx.EVT_MENU, self.OnAbout, mnItem)
     mnBar.Append(mn, '&Help')
-          
+
     #mn.AppendSeparator()
     #mnItem = wx.MenuItem(mn, 105, '&Quit\tCtrl+Q', 'Quit the Application')
     #mnItem.SetBitmap(wx.Image('stock_exit-16.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap())
-    #mn.AppendItem(mnItem)   
+    #mn.AppendItem(mnItem)
     self.SetMenuBar(mnBar)
-    self.CreateStatusBar()   
+    self.CreateStatusBar()
 
   @staticmethod
   def GetPath(wxTree,wxNode):
@@ -302,9 +302,9 @@ class HdfViewerFrame(wx.Frame):
 
   @staticmethod
   def GetPropertyStr(wxTree,wxNode):
-    
+
     path=HdfViewerFrame.GetPath(wxTree,wxNode)
-    
+
     hidStr=wxTree.GetItemText(wxNode)
     hid=wxTree.GetPyData(wxNode)
     #o=wxTree.GetItemData(wxNode)
@@ -321,13 +321,13 @@ class HdfViewerFrame(wx.Frame):
         hid=hid[0]
         t=type(hid)
     if t==h5py.h5f.FileID:
-      txt+=type(hid).__name__+':%d\n'%hid.id     
+      txt+=type(hid).__name__+':%d\n'%hid.id
       hid=h5py.h5o.open(hid,'/')
       t=type(hid)
     objInf=h5py.h5o.get_info(hid)
-    #print t,hid.id,objInf.fileno, objInf.rc, objInf.type, objInf.addr, objInf.hdr       
-    txt+=type(hid).__name__+':%d\n'%hid.id     
-    txt+='addr:%d fileno:%d refCnt:%d\n'%(objInf.addr,objInf.fileno, objInf.rc)      
+    #print t,hid.id,objInf.fileno, objInf.rc, objInf.type, objInf.addr, objInf.hdr
+    txt+=type(hid).__name__+':%d\n'%hid.id
+    txt+='addr:%d fileno:%d refCnt:%d\n'%(objInf.addr,objInf.fileno, objInf.rc)
     try:
       wxNodeParent=wxTree.GetItemParent(wxNode)
       txtParent=wxTree.GetItemText(wxNode)
@@ -364,7 +364,7 @@ class HdfViewerFrame(wx.Frame):
       else:
         txt+='type: '+str(tt.dtype)+'\n'
 
-    
+
       pl=hid.get_create_plist()
       txFcn=(
        ('chunk',h5py.h5p.PropDCID.get_chunk),
@@ -382,37 +382,37 @@ class HdfViewerFrame(wx.Frame):
         try: v=func(pl)
         except ValueError as e: pass
         else:txt+=tx+':'+str(v)+'\n'
-        
+
       if hid.shape==() or np.prod(hid.shape)<10: #show up to max. 10 element arrays
       #if  ttt==h5py.h5t.TypeStringID or hid.shape==() or hid.shape==(1,):
         ds=h5py.Dataset(hid)
         txt+='Value:\n\t'+str(ds.value)+'\n'
 
     return txt
-    
+
   def OnSelChanged(self, event):
       wxNode =  event.GetItem()
-      txt=HdfViewerFrame.GetPropertyStr(self.wxTree,wxNode)            
+      txt=HdfViewerFrame.GetPropertyStr(self.wxTree,wxNode)
       self.display.SetLabel(txt)
 
   def OnMenu(self, event):
       wxNode =  event.GetItem()
-      self.PopupMenu(HdfTreePopupMenu((self.wxTree,wxNode)), event.GetPoint())    
+      self.PopupMenu(HdfTreePopupMenu((self.wxTree,wxNode)), event.GetPoint())
 
 if __name__ == '__main__':
-  def GetArgs():   
+  def GetArgs():
     import sys,argparse #since python 2.7
     exampleCmd='/scratch/detectorData/e14472_00033.hdf5'
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=__doc__,
                                      epilog='Example:\n'+os.path.basename(sys.argv[0])+' '+exampleCmd+'\n ')
     parser.add_argument('hdfFile',   nargs='?', help='the hdf5 to show')
-    
+
     args = parser.parse_args()
     return args
 
   class MyApp(wx.App):
-    
+
     def OnInit(self):
       args=GetArgs()
       frame = HdfViewerFrame(None, 'h5pyViewer')
@@ -421,8 +421,8 @@ if __name__ == '__main__':
       frame.Show(True)
       self.SetTopWindow(frame)
       return True
-    
-#------------------ Main Code ----------------------------------   
+
+#------------------ Main Code ----------------------------------
   #redirect stdout/stderr:
   #http://www.blog.pythonlibrary.org/2009/01/01/wxpython-redirecting-stdout-stderr/
   #https://groups.google.com/forum/#!topic/wxpython-users/S9uSKIYdYoo

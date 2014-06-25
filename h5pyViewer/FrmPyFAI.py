@@ -37,7 +37,7 @@ def FindCenter(arr):
   sy=m.sum(0)
   shape=arr.shape
   xx=np.arange(shape[0])
-  yy=np.arange(shape[1])    
+  yy=np.arange(shape[1])
   x=(xx*sx).sum()/sx.sum()
   y=(yy*sy).sum()/sy.sum()
   #print x,y
@@ -58,18 +58,18 @@ class MPLCanvasPyFAI1D(FigureCanvas):
     ax = fig.add_axes([0.075,0.1,0.75,0.85])
     FigureCanvas.__init__(self,parent, -1, fig)
     #self.mpl_connect('motion_notify_event', self.OnMotion)
-    #self.mpl_connect('button_press_event',   self.OnBtnPress) 
-    #self.mpl_connect('button_release_event', self.OnBtnRelease) 
+    #self.mpl_connect('button_press_event',   self.OnBtnPress)
+    #self.mpl_connect('button_release_event', self.OnBtnRelease)
     #self.mpl_connect('scroll_event', self.OnBtnScroll)
-    #self.mpl_connect('key_press_event',self.OnKeyPress) 
+    #self.mpl_connect('key_press_event',self.OnKeyPress)
     self.fig=fig
     self.ax=ax
-  
+
   def InitChild(self,data):
     fig=self.fig
     ax=self.ax
     ctrX,ctrY=self.center=FindCenter(data)
-    self.ai = pyFAI.AzimuthalIntegrator(1.e3, ctrX, ctrY, 0.0, 0.0, 0.0, 1.e0, 1.e0) 
+    self.ai = pyFAI.AzimuthalIntegrator(1.e3, ctrX, ctrY, 0.0, 0.0, 0.0, 1.e0, 1.e0)
     #canvas=self.canvas
     self.numPtTh=int(np.average(data.shape)/2.)
     out=self.ai.xrpd(data,self.numPtTh)
@@ -84,8 +84,6 @@ class MPLCanvasPyFAI1D(FigureCanvas):
     #pylab.yscale("log")
     #pylab.show()
 
-
-  
 class HdfPyFAI1DFrame(wx.Frame):
   def __init__(self, parent,lbl,hid):
     wx.Frame.__init__(self, parent, title=lbl, size=wx.Size(850, 650))
@@ -103,14 +101,14 @@ class HdfPyFAI1DFrame(wx.Frame):
     sizer.Add(canvas, 1, wx.LEFT | wx.TOP | wx.GROW)
     self.SetSizer(sizer)
 
-    toolbar=ut.AddToolbar(canvas,sizer)  
+    toolbar=ut.AddToolbar(canvas,sizer)
 
     wxAxCtrlLst=[]
     l=len(data.shape)
     idxXY=(l-2,l-1)
     for idx,l in enumerate(data.shape):
       if idx in idxXY:
-        continue 
+        continue
       wxAxCtrl=ut.SliderGroup(self, label='Axis:%d'%idx,range=(0,l-1))
       wxAxCtrl.idx=idx
       wxAxCtrlLst.append(wxAxCtrl)
@@ -118,12 +116,12 @@ class HdfPyFAI1DFrame(wx.Frame):
       wxAxCtrl.SetCallback(HdfPyFAI1DFrame.OnSetView,wxAxCtrl)
 
     sl=ut.GetSlice(idxXY,data.shape,wxAxCtrlLst)
-    
+
     canvas.InitChild(data[sl])
-      
-    #self.Fit()   
+
+    #self.Fit()
     self.Centre()
-    
+
     self.BuildMenu()
     self.canvas=canvas
     self.sizer=sizer
@@ -131,7 +129,7 @@ class HdfPyFAI1DFrame(wx.Frame):
     self.data=data
     self.idxXY=idxXY
     self.wxAxCtrlLst=wxAxCtrlLst
- 
+
   def BuildMenu(self):
     mnBar = wx.MenuBar()
 
@@ -149,11 +147,11 @@ class HdfPyFAI1DFrame(wx.Frame):
     mnBar.Append(mn, '&Help')
 
     self.SetMenuBar(mnBar)
-    self.CreateStatusBar()      
-        
+    self.CreateStatusBar()
+
   def SetIdxXY(self,x,y):
     self.idxXY=(x,y)
- 
+
   @staticmethod
   def SetStatusCB(obj,mode,v):
     if mode==0:
@@ -189,12 +187,12 @@ class HdfPyFAIFrame(HdfImageGLFrame):
     canvas=self.canvas
     raw=canvas.data
     ctrX,ctrY=FindCenter(raw)
-    self.ai = pyFAI.AzimuthalIntegrator(1.e3, ctrX, ctrY, 0.0, 0.0, 0.0, 1.e0, 1.e0) 
-    
+    self.ai = pyFAI.AzimuthalIntegrator(1.e3, ctrX, ctrY, 0.0, 0.0, 0.0, 1.e0, 1.e0)
+
     raw
     self.numPtTh=int(np.average(raw.shape)/2.)
     self.numPtCh=360
-    
+
     imgPolar,theta,chi=self.ai.xrpd2(raw,self.numPtTh,self.numPtCh)
     canvas.data=imgPolar
     print imgPolar.shape
@@ -237,12 +235,12 @@ class DlgSetupPyFAI(wx.Dialog):
     wx.Dialog.__init__(self,parent,-1,'pyFAI Setup')
     ai=parent.ai
     #glColBar=parent.glColBar
-    #dataRange=parent.dataRange   
+    #dataRange=parent.dataRange
     txtCtrX=wx.StaticText(self,-1,'center X')
     txtCtrY=wx.StaticText(self,-1,'center Y')
     txtNumPtTh=wx.StaticText(self,-1,'number of pt in Theta')
-    txtNumPtCh=wx.StaticText(self,-1,'number of pt in Chi')  
-    txtMethod=wx.StaticText(self,-1,'method')   
+    txtNumPtCh=wx.StaticText(self,-1,'number of pt in Chi')
+    txtMethod=wx.StaticText(self,-1,'method')
 
 
 
@@ -252,7 +250,7 @@ class DlgSetupPyFAI(wx.Dialog):
     self.edNumPtCh=edNumPtCh=wx.TextCtrl(self,-1,'%g'%parent.numPtCh,style=wx.TE_PROCESS_ENTER)
     self.cbMethod=cbMethod=wx.ComboBox(self, -1, choices=('default','numny'), style=wx.CB_READONLY)
     #cbtxrFunc.SetSelection(parent.txrTrfFunc)
-    
+
     sizer=wx.BoxSizer(wx.VERTICAL)
     fgs=wx.FlexGridSizer(4,2,5,5)
     fgs.Add(txtCtrX,0,wx.ALIGN_RIGHT)
@@ -284,7 +282,7 @@ class DlgSetupPyFAI(wx.Dialog):
 
   def OnModify(self, event):
     print 'OnModify'
-    frm=self.GetParent() 
+    frm=self.GetParent()
     ds=frm.dataSet
     canvas=frm.canvas
     glImg=canvas.glImg
@@ -309,8 +307,8 @@ class DlgSetupPyFAI(wx.Dialog):
     frm.Refresh(False)
     if event.GetId()==wx.ID_OK:
       event.Skip()#do not consume (use event to close the window and sent return code)
-  
-  
+
+
 if __name__ == '__main__':
   import os,sys,argparse #since python 2.7
   def GetParser(required=True):

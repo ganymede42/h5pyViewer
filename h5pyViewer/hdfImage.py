@@ -44,7 +44,7 @@ class ShiftedLogNorm(mpl.colors.LogNorm):
     def __call__(self, value, clip=None):
       #print value.shape,self.vmin,self.vmax,self.clip,clip
       if clip is None:
-          clip = self.clip 
+          clip = self.clip
       ofs0=1-self.vmin
       ofs1=1./(np.log(self.vmax+1-self.vmin))
       result=np.log(value+ofs0)*ofs1
@@ -77,13 +77,13 @@ class MPLCanvasImg(FigureCanvas):
     ax = fig.add_axes([0.075,0.1,0.75,0.85])
     FigureCanvas.__init__(self,parent, -1, fig)
     self.mpl_connect('motion_notify_event', self.OnMotion)
-    self.mpl_connect('button_press_event',   self.OnBtnPress) 
-    self.mpl_connect('button_release_event', self.OnBtnRelease) 
+    self.mpl_connect('button_press_event',   self.OnBtnPress)
+    self.mpl_connect('button_release_event', self.OnBtnRelease)
     self.mpl_connect('scroll_event', self.OnBtnScroll)
-    self.mpl_connect('key_press_event',self.OnKeyPress) 
+    self.mpl_connect('key_press_event',self.OnKeyPress)
     self.fig=fig
     self.ax=ax
-  
+
   def InitChild(self,data):
     fig=self.fig
     ax=self.ax
@@ -104,14 +104,14 @@ class MPLCanvasImg(FigureCanvas):
     colBar.norm=mpl.colors.Normalize(vmin=vmin, vmax=vmax)
     img.set_norm(colBar.norm)
     img.cmap._init();bg=img.cmap._lut[0].copy();bg[:-1]/=4
-    ax.set_axis_bgcolor(bg)    
-    
+    ax.set_axis_bgcolor(bg)
+
 
     self.colBar=colBar
     self.colCycle = sorted([i for i in dir(plt.cm) if hasattr(getattr(plt.cm,i),'N')])
     self.colIndex = self.colCycle.index(colBar.get_cmap().name)
     self.img=img
- 
+
   def OnMotion(self,event):
     #print event,event.x,event.y,event.inaxes,event.xdata,event.ydata
     if event.inaxes==self.ax:
@@ -142,12 +142,12 @@ class MPLCanvasImg(FigureCanvas):
     colBar=self.colBar
     #print vmin,vmax,p0,p1,pS,type(colBar.norm)
     #print 'x0=%f, xpress=%f, event.xdata=%f, dx=%f, x0+dx=%f'%(x0, xpress, event.xdata, dx, x0+dx)
-    
+
     if isinstance(colBar.norm,mpl.colors.LogNorm):#type(colBar.norm)==mpl.colors.LogNorm does not work...
       if event.button==1:
         #colBar.norm.vmin=.1
         colBar.norm.vmax=vmax*np.exp((pS-event.y)/100)
-        #scale= np.exp((event.y-pS)/100)       
+        #scale= np.exp((event.y-pS)/100)
     elif event.button==1:#move top,bottom,both
       pD = event.y - pS
       vD=(vmax-vmin)/(p1-p0)*(pS-event.y)
@@ -160,8 +160,8 @@ class MPLCanvasImg(FigureCanvas):
       colBar.norm.vmin = vS-scale*(vS-vmin)
       colBar.norm.vmax = vS-scale*(vS-vmax)
     self.img.set_norm(colBar.norm)#force image to redraw
-    colBar.patch.figure.canvas.draw()      
-      
+    colBar.patch.figure.canvas.draw()
+
   def OnBtnPress(self, event):
     """on button press we will see if the mouse is over us and store some data"""
     #print dir(event.guiEvent)
@@ -181,7 +181,7 @@ class MPLCanvasImg(FigureCanvas):
     #self.OnMouse(event)
     try: del self.colBarPressed
     except AttributeError: pass
-  
+
   def OnBtnScroll(self, event):
     #self.OnMouse(event)
     colBar=self.colBar
@@ -199,7 +199,7 @@ class MPLCanvasImg(FigureCanvas):
         colBar.norm.vmin = vS-scale*(vS-vmin)
         colBar.norm.vmax = vS-scale*(vS-vmax)
       self.img.set_norm(colBar.norm)#force image to redraw
-      colBar.patch.figure.canvas.draw()        
+      colBar.patch.figure.canvas.draw()
 
   def OnKeyPress(self, event):
     colCycle=self.colCycle
@@ -258,7 +258,7 @@ class DlgColBarSetupOld(wx.Dialog):
     colBar.norm.vmax=float(self.edVMax.Value)
     canvas.img.set_norm(colBar.norm)
     #colBar.patch.figure.canvas.draw()
-    canvas.draw()      
+    canvas.draw()
 
 
 class DlgColBarSetup(wx.Dialog):
@@ -266,31 +266,31 @@ class DlgColBarSetup(wx.Dialog):
     wx.Dialog.__init__(self,parent,-1,'Colormap Setup')
     colBar=parent.canvas.colBar
     cmap=colBar.cmap
-    nrm=colBar.norm    
-       
+    nrm=colBar.norm
+
     txtVMin=wx.StaticText(self,-1,'vmin')
     txtVMax=wx.StaticText(self,-1,'vmax')
-    txtColMap=wx.StaticText(self,-1,'colormap')   
+    txtColMap=wx.StaticText(self,-1,'colormap')
     self.edVMin=edVMin=wx.TextCtrl(self,-1,'%g'%nrm.vmin,style=wx.TE_PROCESS_ENTER)
     self.edVMax=edVMax=wx.TextCtrl(self,-1,'%g'%nrm.vmax,style=wx.TE_PROCESS_ENTER)
 
-    txtTxrFunc=wx.StaticText(self,-1,'function')   
-    self.cbtxrFunc=cbtxrFunc=wx.ComboBox(self, -1, choices=('linear','logarithmic'), style=wx.CB_READONLY)    
+    txtTxrFunc=wx.StaticText(self,-1,'function')
+    self.cbtxrFunc=cbtxrFunc=wx.ComboBox(self, -1, choices=('linear','logarithmic'), style=wx.CB_READONLY)
     cbtxrFunc.SetSelection(0 if nrm.__class__==mpl.colors.Normalize else 1)
-    
+
     #colMapLst=('Accent', 'Blues', 'BrBG', 'BuGn', 'BuPu', 'Dark2', 'GnBu', 'Greens', 'Greys', 'OrRd', 'Oranges', 'PRGn', 'Paired',
     #'Pastel1', 'Pastel2', 'PiYG', 'PuBu', 'PuBuGn', 'PuOr', 'PuRd', 'Purples', 'RdBu', 'RdGy', 'RdPu', 'RdYlBu', 'RdYlGn', 'Reds',
     #'Set1', 'Set2', 'Set3', 'Spectral', 'YlGn', 'YlGnBu', 'YlOrBr', 'YlOrRd', 'afmhot', 'autumn', 'binary', 'bone', 'brg', 'bwr',
     #'cool', 'coolwarm', 'copper', 'cubehelix', 'flag', 'gist_earth', 'gist_gray', 'gist_heat', 'gist_ncar', 'gist_rainbow', 'gist_stern',
     #'gist_yarg', 'gnuplot', 'gnuplot2', 'gray', 'hot', 'hsv', 'jet', 'ocean', 'pink', 'prism', 'rainbow', 'seismic', 'spectral',
     #'spring', 'summer', 'terrain', 'winter')
-    
+
     colMapLst=('hot','spectral','jet','gray','RdYlBu','hsv','gist_stern','gist_ncar','BrBG','RdYlBu','brg','gnuplot2',
-               'prism','rainbow',)    
-    
+               'prism','rainbow',)
+
     self.cbColMap=cbColMap=wx.ComboBox(self, -1, choices=colMapLst, style=wx.CB_READONLY)
     cbColMap.Value=cmap.name
-    
+
     sizer=wx.BoxSizer(wx.VERTICAL)
     fgs=wx.FlexGridSizer(4,2,5,5)
     fgs.Add(txtVMin,0,wx.ALIGN_RIGHT)
@@ -327,7 +327,7 @@ class DlgColBarSetup(wx.Dialog):
     canvas=parent.canvas
     colBar=canvas.colBar
     cmap=colBar.cmap
-    nrm=colBar.norm    
+    nrm=colBar.norm
     img=canvas.img
     ax=img.get_axes()
     data=img.get_array()
@@ -354,11 +354,11 @@ class DlgColBarSetup(wx.Dialog):
         vmin=1
         colBar.norm = mpl.colors.LogNorm(vmin,vmax)
     img.set_norm(colBar.norm)
-    colBar.patch.figure.canvas.draw()            
+    colBar.patch.figure.canvas.draw()
     parent.Refresh(False)
     if event.GetId()==wx.ID_OK:
-      event.Skip()#do not consume (use event to close the window and sent return code)  
-  
+      event.Skip()#do not consume (use event to close the window and sent return code)
+
 class HdfImageFrame(wx.Frame):
   def __init__(self, parent,lbl,hid):
     wx.Frame.__init__(self, parent, title=lbl, size=wx.Size(850, 650))
@@ -376,14 +376,14 @@ class HdfImageFrame(wx.Frame):
     sizer.Add(canvas, 1, wx.LEFT | wx.TOP | wx.GROW)
     self.SetSizer(sizer)
 
-    toolbar=ut.AddToolbar(canvas,sizer)  
+    toolbar=ut.AddToolbar(canvas,sizer)
 
     wxAxCtrlLst=[]
     l=len(data.shape)
     idxXY=(l-2,l-1)
     for idx,l in enumerate(data.shape):
       if idx in idxXY:
-        continue 
+        continue
       wxAxCtrl=ut.SliderGroup(self, label='Axis:%d'%idx,range=(0,l-1))
       wxAxCtrl.idx=idx
       wxAxCtrlLst.append(wxAxCtrl)
@@ -391,12 +391,12 @@ class HdfImageFrame(wx.Frame):
       wxAxCtrl.SetCallback(HdfImageFrame.OnSetView,wxAxCtrl)
 
     sl=ut.GetSlice(idxXY,data.shape,wxAxCtrlLst)
-    
+
     canvas.InitChild(data[sl])
-      
-    #self.Fit()   
+
+    #self.Fit()
     self.Centre()
-    
+
     self.BuildMenu()
     self.canvas=canvas
     self.sizer=sizer
@@ -404,7 +404,7 @@ class HdfImageFrame(wx.Frame):
     self.data=data
     self.idxXY=idxXY
     self.wxAxCtrlLst=wxAxCtrlLst
- 
+
   def BuildMenu(self):
     mnBar = wx.MenuBar()
 
@@ -424,11 +424,11 @@ class HdfImageFrame(wx.Frame):
     mnBar.Append(mn, '&Help')
 
     self.SetMenuBar(mnBar)
-    self.CreateStatusBar()      
-        
+    self.CreateStatusBar()
+
   def SetIdxXY(self,x,y):
     self.idxXY=(x,y)
- 
+
   @staticmethod
   def SetStatusCB(obj,mode,v):
     if mode==0:
@@ -444,7 +444,7 @@ class HdfImageFrame(wx.Frame):
     imgFrm=usrData.slider.Parent
     #imgFrm.img.set_array(imgFrm.data[usrData.value,...])
     data=imgFrm.data
-    sl=ut.GetSlice(imgFrm.idxXY,data.shape,imgFrm.wxAxCtrlLst)   
+    sl=ut.GetSlice(imgFrm.idxXY,data.shape,imgFrm.wxAxCtrlLst)
 
     try:
       tomoNorm=imgFrm.tomoNorm
@@ -455,7 +455,7 @@ class HdfImageFrame(wx.Frame):
       imgFrm.canvas.img.set_array(data)
 
     if imgFrm.mnItemShowMoment.IsChecked():
-      imgFrm.PlotMoments()       
+      imgFrm.PlotMoments()
     imgFrm.canvas.draw()
     pass
 
@@ -465,15 +465,19 @@ class HdfImageFrame(wx.Frame):
       if dlg.ShowModal() == wx.ID_OK:
         fnMatMsk = dlg.GetPath()
         print 'OnOpen',fnMatMsk
-      dlg.Destroy()       
+      dlg.Destroy()
       if not fnMatMsk:
-        return      
+        return
       #fnMatMsk='/scratch/detectorData/cSAXS_2013_10_e14608_georgiadis_3D_for_Marianne/analysis/data/pilatus_valid_mask.mat'
       self.procMoment=pm=ProcMoment()
-      pm.SetMskMat(fnMatMsk,False)   
+      pm.SetMskMat(fnMatMsk,False)
+      #roi=[603, 826, 200, 200]
+      #pm.roi=(slice(roi[1],roi[1]+roi[3]),slice(roi[0],roi[0]+roi[2]))
+      #pm.shape=(roi[3],roi[2])
 
       #pm.SetProcess('python')
-      pm.SetProcess('pyFast')
+      #pm.SetProcess('pyFast')
+      pm.SetProcess('c')
       self.PlotMoments()
       #self.canvas.img.draw()
       data=self.canvas.img.get_array()
@@ -482,24 +486,24 @@ class HdfImageFrame(wx.Frame):
       v=data.sum(axis=0); x=np.arange(v.size); x0=x.sum(); m0=v.sum(); m1=(v*x).sum(); m2=(v*x*x).sum()
       ax[0].plot(v);
       m=m1/m0
-      s=np.sqrt( (m2-(m1**2/m0))/m0)     
+      s=np.sqrt( (m2-(m1**2/m0))/m0)
       xx=1/(s*np.sqrt(2*np.pi))*np.exp(-.5*((x-m)/s)**2)
       ax[0].set_title('%g | %g | %g | %g | %g'%(m0,m1,m2,m,s))
-      ax[0].hold(True);ax[0].plot(xx*m0)      
-      
+      ax[0].hold(True);ax[0].plot(xx*m0)
+
       v=data.sum(axis=1);
       ax[1].plot(v);
-      
-    
+
+
       plt.show()
-      #print pm.resArr[0:3],pm.resArr[1]/pm.resArr[0],pm.resArr[2]/pm.resArr[0]      
+      #print pm.resArr[0:3],pm.resArr[1]/pm.resArr[0],pm.resArr[2]/pm.resArr[0]
     else:
       for o in self.goMoment:
         o.remove()
       del self.goMoment
       del self.procMoment
-    self.canvas.draw()             
-      
+    self.canvas.draw()
+
   def PlotMoments(self):
     data=self.canvas.img.get_array()
     pm=self.procMoment
@@ -509,7 +513,10 @@ class HdfImageFrame(wx.Frame):
       data.ravel()[pm.mskIdx]=0
     except AttributeError as e:
       print e
-
+    try:
+      data=data[pm.roi]
+    except AttributeError as e:
+      print e
     #data=np.log(data+1)
     #data[100:110,500:510]=1000 #y,x
     #data[650:850,700:850]=0 #y,x
@@ -519,7 +526,7 @@ class HdfImageFrame(wx.Frame):
 
     m=pm.resArr
     m00=m[0];m01=m[1];m10=m[2];m11=m[3];m02=m[4];m20=m[5]
-    
+
     xm = m10 / m00
     ym = m01 / m00
     u11 = (m11 - xm * m01) / m00
@@ -558,20 +565,20 @@ class HdfImageFrame(wx.Frame):
       #tomoNorm=float(np.iinfo(tomoNorm.dtype).max/2)/tomoNorm
       tomoNorm=tomoNorm.mean()/tomoNorm
       #tomoNorm=tomoNorm/float(np.iinfo(tomoNorm.dtype).max)
-      data=self.canvas.img.get_array()     
+      data=self.canvas.img.get_array()
       data*=tomoNorm
       #data/=tomoNorm
       self.tomoNorm=tomoNorm
       self.canvas.img.set_array(data)
     else:
       tomoNorm=self.tomoNorm
-      data=self.canvas.img.get_array()     
+      data=self.canvas.img.get_array()
       data/=tomoNorm
       self.canvas.img.set_array(data)
-      del self.tomoNorm     
-    self.canvas.draw()             
-    
-    
+      del self.tomoNorm
+    self.canvas.draw()
+
+
   def OnHelp(self,event):
     msg='''to change the image selection:
 use the toolbar at the bottom to pan and zoom the image
@@ -586,7 +593,7 @@ use cursor up and down to use a different colormap'''
     dlg = wx.MessageDialog(self, msg, 'Help', wx.OK|wx.ICON_INFORMATION)
     dlg.ShowModal()
     dlg.Destroy()
-  
+
   def OnColmapSetup(self,event):
     dlg=DlgColBarSetup(self)
     if dlg.ShowModal()==wx.ID_OK:
@@ -600,12 +607,12 @@ use cursor up and down to use a different colormap'''
       ax.invert_xaxis()
     else:
       ax.invert_yaxis()
-    self.canvas.draw() 
+    self.canvas.draw()
     pass
-       
+
 if __name__ == '__main__':
   import os,sys,argparse #since python 2.7
-  def GetParser(required=True):   
+  def GetParser(required=True):
     fnHDF='/scratch/detectorData/e14472_00033.hdf5'
     #lbl='mcs'
     lbl='pilatus_1'
@@ -616,7 +623,7 @@ if __name__ == '__main__':
                                      description=__doc__,
                                      epilog='Example:\n'+os.path.basename(sys.argv[0])+' '+exampleCmd+'\n ')
     parser.add_argument('--hdfFile', required=required, default=fnHDF, help='the hdf5 to show')
-    parser.add_argument('--elem', required=required, default=elem, help='the path to the element in the hdf5 file')   
+    parser.add_argument('--elem', required=required, default=elem, help='the path to the element in the hdf5 file')
     return parser
     args = parser.parse_args()
     return args

@@ -18,7 +18,7 @@ import os,h5py
 import numpy as np
 import utilities as ut
 from GLCanvasImg import *
-  
+
 class HdfImageGLFrame(wx.Frame):
   def __init__(self, parent, title, hid):
         # Forcing a specific style on the window.
@@ -44,7 +44,7 @@ class HdfImageGLFrame(wx.Frame):
     idxXY=(l-2,l-1)
     for idx,l in enumerate(ds.shape):
       if idx in idxXY:
-        continue 
+        continue
       wxAxCtrl=ut.SliderGroup(self, label='Axis:%d'%idx,range=(0,l-1))
       wxAxCtrl.idx=idx
       wxAxCtrlLst.append(wxAxCtrl)
@@ -52,13 +52,13 @@ class HdfImageGLFrame(wx.Frame):
       wxAxCtrl.SetCallback(self.OnSetView,wxAxCtrl)
 
     sl=ut.GetSlice(idxXY,ds.shape,wxAxCtrlLst)
-    
+
 
     canvas.data=ds[sl]
-      
-    #self.Fit()   
+
+    #self.Fit()
     self.Centre()
-    
+
     self.canvas=canvas
     self.sizer=sizer
     self.idxXY=idxXY
@@ -82,7 +82,7 @@ class HdfImageGLFrame(wx.Frame):
     mnBar.Append(mn, '&Help')
 
     self.SetMenuBar(mnBar)
-    self.CreateStatusBar()      
+    self.CreateStatusBar()
 
   @staticmethod
   def SetStatusCB(obj,mode,v):
@@ -104,7 +104,7 @@ class HdfImageGLFrame(wx.Frame):
     #canvas.Refresh(False)
     #canvas.Update()
     pass
-    
+
 if __name__ == '__main__':
   import os,sys,argparse #since python 2.7
   def GetParser(required=True):

@@ -90,7 +90,7 @@ class HdfTreeCtrl(wx.TreeCtrl):
 if __name__ == '__main__':
   import utilities as ut
   import os,sys,argparse #since python 2.7
-  def GetParser(required=True):   
+  def GetParser(required=True):
     fnHDF='/scratch/detectorData/e14472_00033.hdf5'
     #lbl='mcs'
     #lbl='pilatus_1'
@@ -105,10 +105,10 @@ if __name__ == '__main__':
     return args
 
   class HdfTreeFrame(wx.Frame):
- 
+
     def __init__(self, parent, title, fid):
       wx.Frame.__init__(self, parent, title=title, size=wx.Size(350, 450))
-      wxTree = HdfTreeCtrl(self, style=wx.TR_HAS_BUTTONS)  
+      wxTree = HdfTreeCtrl(self, style=wx.TR_HAS_BUTTONS)
       self.Centre()
       wxTree.ShowHirarchy(fid)
       self.wxTree=wxTree
