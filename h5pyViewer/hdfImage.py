@@ -85,10 +85,17 @@ class MPLCanvasImg(FigureCanvas):
     self.ax=ax
 
   def InitChild(self,data):
+    if data.dtype==np.complex128:
+      self.dataRaw=data
+      #data=np.angle(data)
+      data=np.absolute(data)
+
     fig=self.fig
     ax=self.ax
-    avg=np.average(data); std=np.std(data)
-    vmin=np.min(data);vmax=np.max(data)
+
+    msk=~np.isnan(data);msk=data[msk]
+    avg=np.average(msk); std=np.std(msk)
+    vmin=np.min(msk);vmax=np.max(msk)
     vmin=max(vmin,avg-3*std);vmax=min(vmax,avg+3*std)
     if vmin==0:vmin=1
     if vmax<=vmin:
@@ -397,7 +404,7 @@ class HdfImageFrame(wx.Frame):
     #self.Fit()
     self.Centre()
 
-    self.BuildMenu()
+    self.BuildMenu(data.dtype)
     self.canvas=canvas
     self.sizer=sizer
     self.toolbar=toolbar
@@ -405,7 +412,7 @@ class HdfImageFrame(wx.Frame):
     self.idxXY=idxXY
     self.wxAxCtrlLst=wxAxCtrlLst
 
-  def BuildMenu(self):
+  def BuildMenu(self,dtype):
     mnBar = wx.MenuBar()
 
     #-------- Edit Menu --------
@@ -418,6 +425,11 @@ class HdfImageFrame(wx.Frame):
     self.mnItemShowMoment=mnItem
     mnItem=mn.Append(wx.ID_ANY, 'Tomo Normalize', 'Multiplies each pixel with a normalization factor. Assumes there exist an array exchange/data_white', kind=wx.ITEM_CHECK);self.Bind(wx.EVT_MENU, self.OnTomoNormalize, mnItem)
     self.mnItemTomoNormalize=mnItem
+
+    if dtype==np.complex128:
+      mnItem=mn.Append(wx.ID_ANY, 'Complex: Phase', kind=wx.ITEM_CHECK);self.Bind(wx.EVT_MENU, self.OnSetComplexData, mnItem)
+
+
     mnBar.Append(mn, '&Edit')
     mn = wx.Menu()
     mnItem=mn.Append(wx.ID_ANY, 'Help', 'How to use the image viewer');self.Bind(wx.EVT_MENU, self.OnHelp, mnItem)
@@ -578,6 +590,13 @@ class HdfImageFrame(wx.Frame):
       del self.tomoNorm
     self.canvas.draw()
 
+  def OnSetComplexData(self, event):
+    if event.IsChecked():
+      data=np.angle(self.canvas.dataRaw)
+    else:
+      data=np.absolute(self.canvas.dataRaw)
+    self.canvas.img.set_array(data)
+    self.canvas.draw()
 
   def OnHelp(self,event):
     msg='''to change the image selection:

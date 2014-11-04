@@ -285,8 +285,9 @@ use mouse wheel to zoom in/out the image at a given point
       vmin=data.min();vmax=data.max()
       vmin=max(vmin,avg-3*std);vmax=min(vmax,avg+3*std)
     elif txrTrfFunc==1:
-      avg=np.average(data); std=np.std(data)
-      vmin=data.min();vmax=data.max()
+      msk=~np.isnan(data);msk=data[msk]
+      avg=np.average(msk); std=np.std(msk)
+      vmin=msk.min();vmax=msk.max()
       vmin=max(vmin,avg-3*std);vmax=min(vmax,avg+3*std)
     self.dataRange=(vmin,vmax)
 
