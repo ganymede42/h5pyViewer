@@ -113,7 +113,7 @@ def runSetup(**kv):
         'maintainer'  :'Thierry Zamofing',
         'maintainer_email':'thierry.zamofing@psi.ch',
         'url'         :'www.psi.ch',
-        'license'     :'(c) 2013 PSI',
+        'license'     :'BSD',
         'long_description':open('README.rst', 'r').read(),
         'platforms'   : ['Linux','Windows'],
         #'py_modules'  :['libDetXR', 'cbfParser'],
