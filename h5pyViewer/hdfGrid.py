@@ -114,7 +114,7 @@ class Table1DCompound(wx.grid.PyGridTableBase):
     return self.data.shape[0]
 
   def GetNumberCols(self):
-    return self.data.dtype.num
+    return len(self.data.dtype.names)
 
   def GetValue(self, row, col):
     try:

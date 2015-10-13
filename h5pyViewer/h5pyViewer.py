@@ -225,7 +225,7 @@ class HdfViewerFrame(wx.Frame):
     wxTxt = wx.StaticText(wxSplt, -1, '',(10,10) )#, style=wx.ALIGN_CENTRE)
 
     wxSplt.SplitVertically(wxTree, wxTxt)
-
+    wxSplt.SetMinimumPaneSize(320)
     #wxLstCtrl=HdfAttrListCtrl(wxSplt)
     #wxSplt.SplitVertically(wxTree, wxLstCtrl)
     self.BuildMenu()
