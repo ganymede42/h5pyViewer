@@ -92,12 +92,19 @@ class MyINSTALL_LIB (distutils.command.install_lib.install_lib):
     print 'MyINSTALL_LIB.run()'
     distutils.command.install_lib.install_lib.run(self)
     instDir=os.path.join(self.install_dir,'h5pyViewer')
-    print instDir
+    binDir=self.distribution.command_obj['install'].install_scripts
+    print 'instDir',instDir,'binDir',binDir
     if platform.system()=='Linux':
+      mod=0755
       for fn in('h5pyViewer','hdfAttrib','hdfGrid','hdfImageGL','hdfImage','hdfTree'):
-        fn=os.path.join(instDir,fn+'.py')
-        print 'chmod '+fn
-        os.chmod(fn,0774)
+        fnInst=os.path.join(instDir,fn+'.py')
+        fnBin=os.path.join(binDir,fn)
+        print 'chmod %o '%mod+fnInst
+        print 'symlink %s->%s '%(fnInst,fnBin)
+        os.chmod(fnInst,mod)
+        if os.path.islink(fnBin):
+          os.unlink(fnBin)
+        os.symlink(fnInst,fnBin)
     pass
 
 
