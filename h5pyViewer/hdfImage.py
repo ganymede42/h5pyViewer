@@ -473,7 +473,7 @@ class HdfImageFrame(wx.Frame):
 
   def OnShowMoments(self,event):
     if event.IsChecked():
-      dlg = wx.FileDialog(self, "Choose valid mask file (e.g. pilatus_valid_mask.mat)", os.getcwd(), '','MATLAB files (*.mat)|*.mat|all (*.*)|*.*', wx.OPEN|wx.FD_CHANGE_DIR)
+      dlg = wx.FileDialog(self, "Choose valid mask file (e.g. pilatus_valid_mask.mat)", os.getcwd(), '','MATLAB files (*.mat)|*.mat|all (*.*)|*.*', wx.FD_OPEN|wx.FD_CHANGE_DIR)
       if dlg.ShowModal() == wx.ID_OK:
         fnMatMsk = dlg.GetPath()
         print 'OnOpen',fnMatMsk

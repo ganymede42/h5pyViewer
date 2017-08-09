@@ -127,7 +127,7 @@ class HdfTreePopupMenu(wx.Menu):
     lbl=wxTree.GetItemText(wxNode)
     hid=wxTree.GetPyData(wxNode)
     if type(hid)==tuple: hid=hid[0] #external link->get dataset
-    dlg = wx.FileDialog(wxTree, "Choose ROI mask file (e.g. pilatus_integration_mask.mat)", os.getcwd(), '','MATLAB files (*.mat)|*.mat|all (*.*)|*.*', wx.OPEN|wx.FD_CHANGE_DIR)
+    dlg = wx.FileDialog(wxTree, "Choose ROI mask file (e.g. pilatus_integration_mask.mat)", os.getcwd(), '','MATLAB files (*.mat)|*.mat|all (*.*)|*.*', wx.FD_OPEN|wx.FD_CHANGE_DIR)
     if dlg.ShowModal() == wx.ID_OK:
       fnMatRoi = dlg.GetPath()
       print 'OnOpen',fnMatRoi
@@ -238,7 +238,7 @@ class HdfViewerFrame(wx.Frame):
     self.CloseFile()
 
   def OnOpen(self, event):
-    dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), '','HDF5 files (*.hdf5;*.h5)|*.hdf5;*.h5|all (*.*)|*.*', wx.OPEN|wx.FD_CHANGE_DIR)
+    dlg = wx.FileDialog(self, "Choose a file", os.getcwd(), '','HDF5 files (*.hdf5;*.h5)|*.hdf5;*.h5|all (*.*)|*.*', wx.FD_OPEN|wx.FD_CHANGE_DIR)
     if dlg.ShowModal() == wx.ID_OK:
       path = dlg.GetPath()
       #mypath = os.path.basename(path)
