@@ -67,14 +67,14 @@ class GLCanvasImg(wx.glcanvas.GLCanvas):
   def __init__(self,parent,SetStatusCB=None):
     if SetStatusCB:
       self.SetStatusCB=SetStatusCB
-    self.GLinitialized = False
     attribList = (wx.glcanvas.WX_GL_RGBA,  # RGBA
                   wx.glcanvas.WX_GL_DOUBLEBUFFER,  # Double Buffered
                   wx.glcanvas.WX_GL_DEPTH_SIZE, 24)  # 24 bit
-
     # Create the canvas
     #self.canvas = wx.glcanvas.GLCanvas(parent, attribList=attribList)
     wx.glcanvas.GLCanvas.__init__(self, parent, attribList=attribList)
+    self.GLinitialized = False
+    self.context = wx.glcanvas.GLContext(self)
 
     # Set the event handlers.
     self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
@@ -90,10 +90,10 @@ class GLCanvasImg(wx.glcanvas.GLCanvas):
       data=self.data
     except AttributeError:
       return
-    if event.ButtonDown(0):
+    if event.ButtonDown():
       self.mouseStart=(np.array(event.GetPosition()),self.imgCoord.copy())
       print 'drag Start'
-    elif event.ButtonUp(0):
+    elif event.ButtonUp():
       print 'drag End'
       del self.mouseStart
     else:
@@ -180,23 +180,19 @@ class GLCanvasImg(wx.glcanvas.GLCanvas):
     pass # Do nothing, to avoid flashing on MSWin
 
   def OnSize(self, event):
-    """Process the resize event."""
-    #print 'OnSize'
-    if self.GetContext():
-            # Make sure the frame is shown before calling SetCurrent.
-      self.Show()
-      self.SetCurrent()
-
-      size = self.GetClientSize()
-      self.Reshape(size.width, size.height)
-      self.Refresh(False)
-
+    print 'OnSize'
+    wx.CallAfter(self.DoSetViewport)
     event.Skip()
+  def DoSetViewport(self):
+    print 'DoSetViewport'
+    size = self.GetClientSize()
+    self.SetCurrent(self.context)
+    glViewport(0, 0, size.width, size.height)
 
   def OnPaint(self, event):
     """Process the drawing event."""
     #print 'OnPaint'
-    self.SetCurrent()
+    self.SetCurrent(self.context)
 
     # This is a 'perfect' time to initialize OpenGL ... only if we need to
     if not self.GLinitialized:

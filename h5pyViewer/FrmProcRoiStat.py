@@ -35,14 +35,14 @@ from scipy import ndimage as ndi
 ###########################################
 
 class ProcRoiStatFrame(HdfImageGLFrame):
-  def __init__(self, parent, title, hid,fnMatRoi):
+  def __init__(self, parent, title, hid,fnValMsk,fnIntegMsk):
     HdfImageGLFrame.__init__(self, parent, title, hid)
     #HdfPyFAI1DFrame(self, title, hid)
     canvas=self.canvas
     raw=canvas.data
 
     self.prs=prs=ProcRoiStat()
-    prs.SetRoiMat(fnMatRoi,raw.shape)
+    prs.SetRoiMat((fnValMsk,fnIntegMsk),raw.shape)
     prs.SetProcess('avg')
     print 'numnber of ROI,',prs.roiLenArr.size,'Total number of pixels',prs.roiIdxArr.size
     prs.Process(raw)

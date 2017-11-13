@@ -252,7 +252,7 @@ class DlgSetupPyFAI(wx.Dialog):
     #cbtxrFunc.SetSelection(parent.txrTrfFunc)
 
     sizer=wx.BoxSizer(wx.VERTICAL)
-    fgs=wx.FlexGridSizer(4,2,5,5)
+    fgs=wx.FlexGridSizer(5,2,5,5)
     fgs.Add(txtCtrX,0,wx.ALIGN_RIGHT)
     fgs.Add(edCtrX,0,wx.EXPAND)
     fgs.Add(txtCtrY,0,wx.ALIGN_RIGHT)
@@ -344,8 +344,8 @@ if __name__ == '__main__':
         sys.stderr.write('Unable to open Object: '+args.elem+'\n')
         parser.print_usage(sys.stderr)
         return True
-      #frame = HdfPyFAIFrame(None,args.elem,hid)
-      frame = HdfPyFAI1DFrame(None,args.elem,hid)
+      frame = HdfPyFAIFrame(None,args.elem,hid)
+      #frame = HdfPyFAI1DFrame(None,args.elem,hid)
       frame.Show()
       self.SetTopWindow(frame)
       return True

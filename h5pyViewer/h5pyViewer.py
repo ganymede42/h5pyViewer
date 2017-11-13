@@ -127,15 +127,20 @@ class HdfTreePopupMenu(wx.Menu):
     lbl=wxTree.GetItemText(wxNode)
     hid=wxTree.GetPyData(wxNode)
     if type(hid)==tuple: hid=hid[0] #external link->get dataset
+    dlg = wx.FileDialog(wxTree, "Choose valid mask file (e.g. pilatus_valid_mask.mat)", os.getcwd(), '','MATLAB files (*.mat)|*.mat|all (*.*)|*.*', wx.FD_OPEN|wx.FD_CHANGE_DIR)
+    if dlg.ShowModal() == wx.ID_OK:
+      fnValMsk= dlg.GetPath()
+      print 'OnOpen',fnValMsk
+    dlg.Destroy()
+    if not fnValMsk: return
     dlg = wx.FileDialog(wxTree, "Choose ROI mask file (e.g. pilatus_integration_mask.mat)", os.getcwd(), '','MATLAB files (*.mat)|*.mat|all (*.*)|*.*', wx.FD_OPEN|wx.FD_CHANGE_DIR)
     if dlg.ShowModal() == wx.ID_OK:
-      fnMatRoi = dlg.GetPath()
-      print 'OnOpen',fnMatRoi
+      fnIntegMsk = dlg.GetPath()
+      print 'OnOpen',fnIntegMsk
     dlg.Destroy()
-    if not fnMatRoi:
-      return
+    if not fnIntegMsk: return
     #fnMatRoi='/scratch/detectorData/cSAXS_2013_10_e14608_georgiadis_3D_for_Marianne/analysis/data/pilatus_integration_mask.mat'
-    frame=ProcRoiStatFrame(wxTree,lbl,hid,fnMatRoi)
+    frame=ProcRoiStatFrame(wxTree,lbl,hid,fnValMsk,fnIntegMsk)
     frame.Show(True)
 
   def OnShell(self, event):
