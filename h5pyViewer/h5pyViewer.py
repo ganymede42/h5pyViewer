@@ -308,7 +308,7 @@ class HdfViewerFrame(wx.Frame):
   @staticmethod
   def GetPropertyStr(wxTree,wxNode):
 
-    path=HdfViewerFrame.GetPath(wxTree,wxNode)
+    path=str(HdfViewerFrame.GetPath(wxTree,wxNode))
 
     hidStr=wxTree.GetItemText(wxNode)
     hid=wxTree.GetPyData(wxNode)
