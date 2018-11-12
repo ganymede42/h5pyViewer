@@ -49,7 +49,7 @@ import sys,os,platform,subprocess
 def getVersion():
   #for dirname, dirnames, filenames in os.walk('.'):
   #  for subdirname in dirnames:
-  #    print os.path.join(dirname, subdirname)
+  #    os.path.join(dirname, subdirname)
   #  for filename in filenames:
   #    print os.path.join(dirname, filename)
 
@@ -79,28 +79,28 @@ def getVersion():
     res=res[1:-1].rsplit('-',1)
     ver=res[0].replace('-','.')
     gitcmt=res[1][1:]
-  print ':'+ver+':'+gitcmt+':'
+  print (':'+ver+':'+gitcmt+':')
   return (ver,gitcmt)
 
 class MyINSTALL (distutils.command.install.install):
     def run(self):
         distutils.command.install.install.run(self)
-        print 'post_install_message'
+        print ('post_install_message')
 
 class MyINSTALL_LIB (distutils.command.install_lib.install_lib):
   def run(self):
-    print 'MyINSTALL_LIB.run()'
+    print ('MyINSTALL_LIB.run()')
     distutils.command.install_lib.install_lib.run(self)
     instDir=os.path.join(self.install_dir,'h5pyViewer')
     binDir=self.distribution.command_obj['install'].install_scripts
-    print 'instDir',instDir,'binDir',binDir
+    print ('instDir',instDir,'binDir',binDir)
     if platform.system()=='Linux':
       mod=0755
       for fn in('h5pyViewer','hdfAttrib','hdfGrid','hdfImageGL','hdfImage','hdfTree'):
         fnInst=os.path.join(instDir,fn+'.py')
         fnBin=os.path.join(binDir,fn)
-        print 'chmod %o '%mod+fnInst
-        print 'symlink %s->%s '%(fnInst,fnBin)
+        print ('chmod %o '%mod+fnInst)
+        print ('symlink %s->%s '%(fnInst,fnBin))
         os.chmod(fnInst,mod)
         if os.path.islink(fnBin):
           os.unlink(fnBin)
@@ -134,7 +134,7 @@ def runSetup(**kv):
     args.update(kv)
   distutils.core.setup(**args)
 
-  print 'done'
+  print ('done')
   pass
 
 def main():
